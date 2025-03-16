@@ -16,7 +16,7 @@
     <version>${revision}</version>
     <packaging>pom</packaging>
     <name>toint-jdy4j</name>
-    <description>toint-jdy4j是一个开源的简道云增强框架</description>
+    <description>toint-jdy4j 是一个开源的简道云增强框架</description>
     <url>https://github.com/toint-admin/toint-jdy4j</url>
 
     <modules>
