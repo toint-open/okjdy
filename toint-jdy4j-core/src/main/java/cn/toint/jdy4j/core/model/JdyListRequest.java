@@ -143,13 +143,15 @@ public class JdyListRequest {
     }
 
     /**
-     * 为了适配sql语意,并在其中做了一些初始化操作
+     * 为了适配 sql 语法, 在方法中做了一些初始化操作, 包括调用 api 读取表单信息
      */
     public JdyListRequest where() {
         // 查询字段信息
         if (JdyWidgetHolder.get() == null) {
             final JdyWidgetRequest widgetRequest = new JdyWidgetRequest(this.appId, this.entryId);
             final JdyWidgetResponse widgetResponse = SpringUtil.getBean(JdyAppService.class).listWidget(widgetRequest);
+            // 缓存表单信息上下文, 在频繁操作表单的时候, 可以避免频繁的通过 api 去读取表单信息
+            // 需要注意: 如果上下文未执行 remove, 此时表单信息发生了改变, 框架无法感知
             JdyWidgetHolder.set(widgetResponse);
         }
 

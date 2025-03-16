@@ -24,6 +24,10 @@ import org.dromara.hutool.core.lang.Assert;
 import java.util.Optional;
 
 /**
+ * 简道云表单字段上下文
+ * <p>在频繁操作表单的时候, 可以避免频繁的通过 api 去读取表单信息</p>
+ * <p>需要注意: 如果上下文未执行 remove, 此时表单信息发生了改变, 框架无法感知</p>
+ *
  * @author Toint
  * @date 2024/10/19
  */

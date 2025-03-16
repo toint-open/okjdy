@@ -20,7 +20,7 @@ import com.alibaba.ttl.TransmittableThreadLocal;
 import org.dromara.hutool.core.lang.Assert;
 
 /**
- * 简道云配置上下文环境
+ * 简道云企业配置上下文
  *
  * @author Toint
  * @date 2024/10/19
@@ -34,12 +34,12 @@ public class JdyConfigStorageHolder {
 
     public static String getRequire() {
         final String result = THREAD_LOCAL.get();
-        Assert.notBlank(result, "当前上下文环境信息不存在");
+        Assert.notBlank(result, "当前企业上下文不存在");
         return result;
     }
 
-    public static void set(String label) {
-        THREAD_LOCAL.set(label);
+    public static void set(final String corpName) {
+        THREAD_LOCAL.set(corpName);
     }
 
     /**

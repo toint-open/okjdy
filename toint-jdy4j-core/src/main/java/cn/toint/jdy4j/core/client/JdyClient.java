@@ -22,6 +22,7 @@ import cn.toint.jdy4j.core.service.JdyFileService;
 import org.dromara.hutool.extra.spring.SpringUtil;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * 简道云客户端
@@ -51,6 +52,50 @@ public interface JdyClient extends AutoCloseable {
      */
     static JdyClient get(final String corpName) {
         return JdyClient.get().switchoverTo(corpName);
+    }
+
+    /**
+     * 执行方法
+     *
+     * @param function 执行方法
+     * @param autoClose 是否自动关闭资源
+     * @return result
+     */
+    default <R> R exec(final Function<JdyClient, R> function, final boolean autoClose) {
+        JdyClient jdyClient = null;
+        try {
+            jdyClient = JdyClient.get();
+            return function.apply(jdyClient);
+        } finally {
+            if (autoClose && jdyClient != null) {
+                try {
+                    jdyClient.close();
+                } catch (Exception e) {
+                    //noinspection ThrowFromFinallyBlock
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+    /**
+     * 执行方法后自动关闭资源
+     *
+     * @param function 执行方法
+     * @return result
+     */
+    default <R> R execThenAutoClose(final Function<JdyClient, R> function) {
+       return this.exec(function, true);
+    }
+
+    /**
+     * 执行方法后不自动关闭资源
+     *
+     * @param function 执行方法
+     * @return result
+     */
+    default <R> R execThenNotAutoClose(final Function<JdyClient, R> function) {
+        return this.exec(function, false);
     }
 
     /**
