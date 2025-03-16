@@ -34,22 +34,6 @@ public class JdyUtil {
     }
 
     /**
-     * 是否为请求超过频率异常
-     *
-     * @param responseBody responseBody
-     * @return 是否为请求超过频率异常
-     */
-    public static boolean isLimitException(final String responseBody) {
-        return Optional.ofNullable(responseBody)
-                .map(JacksonUtil::readTree)
-                .map(jsonNode -> jsonNode.get("code"))
-                .map(JsonNode::numberValue)
-                .map(Number::intValue)
-                .filter(code -> code == 8303 || code == 8304) // 请求超过频率异常
-                .isPresent();
-    }
-
-    /**
      * 校验智能助手响应
      *
      * @param responseStr 简道云响应信息
