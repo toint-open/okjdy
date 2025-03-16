@@ -76,7 +76,7 @@ public class JdyUtil {
      */
     public static boolean checkIntelligentAssistantResponse(final String responseStr) {
         try {
-            checkIntelligentAssistantResponse(responseStr);
+            JdyUtil.validIntelligentAssistantResponse(responseStr);
             return true;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
