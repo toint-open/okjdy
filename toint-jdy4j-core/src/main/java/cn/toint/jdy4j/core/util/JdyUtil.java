@@ -1,6 +1,6 @@
 package cn.toint.jdy4j.core.util;
 
-import cn.toint.jdy4j.core.util.JacksonUtil;
+import cn.toint.tool.json.JacksonUtil;
 import cn.toint.jdy4j.core.model.BaseJdyTable;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;

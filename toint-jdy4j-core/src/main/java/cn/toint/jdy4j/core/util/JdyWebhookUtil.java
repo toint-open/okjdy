@@ -1,6 +1,6 @@
 package cn.toint.jdy4j.core.util;
 
-import cn.toint.jdy4j.core.util.JacksonUtil;
+import cn.toint.tool.json.JacksonUtil;
 import cn.toint.jdy4j.core.model.JdyWebhookRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import org.dromara.hutool.core.lang.Assert;

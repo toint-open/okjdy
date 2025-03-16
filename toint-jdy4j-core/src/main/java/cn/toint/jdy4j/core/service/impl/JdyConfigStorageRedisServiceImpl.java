@@ -3,7 +3,7 @@ package cn.toint.jdy4j.core.service.impl;
 import cn.toint.jdy4j.core.constant.JdyConstant;
 import cn.toint.jdy4j.core.model.JdyConfigStorage;
 import cn.toint.jdy4j.core.service.JdyConfigStorageService;
-import cn.toint.jdy4j.core.util.JacksonUtil;
+import cn.toint.tool.json.JacksonUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

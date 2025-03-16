@@ -15,7 +15,7 @@
  */
 package cn.toint.jdy4j.core.model;
 
-import cn.toint.jdy4j.core.util.JacksonUtil;
+import cn.toint.tool.json.JacksonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

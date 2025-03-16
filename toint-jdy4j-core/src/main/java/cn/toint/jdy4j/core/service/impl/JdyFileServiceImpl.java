@@ -1,6 +1,6 @@
 package cn.toint.jdy4j.core.service.impl;
 
-import cn.toint.jdy4j.core.util.JacksonUtil;
+import cn.toint.tool.json.JacksonUtil;
 import cn.toint.jdy4j.core.model.JdyGetUploadTokenRequest;
 import cn.toint.jdy4j.core.model.JdyGetUploadTokenResponse;
 import cn.toint.jdy4j.core.model.JdyUrlEnum;
