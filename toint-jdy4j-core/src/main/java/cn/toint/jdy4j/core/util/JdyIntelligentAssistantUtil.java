@@ -13,20 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.toint.jdy4j.core.model;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+package cn.toint.jdy4j.core.util;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
+ * 简道云智能助手工具
+ *
  * @author Toint
- * @date 2025/3/15
+ * @date 2025/3/17
  */
-@Data
-@NoArgsConstructor
-public class JdySysWidget {
+@Slf4j
+public class JdyIntelligentAssistantUtil {
     /**
-     * 系统字段名称
+     * 校验智能助手响应
+     *
+     * @param responseStr 简道云响应信息
      */
-    private String name;
+    public static void validIntelligentAssistantResponse(final String responseStr) {
+        JdyUtil.validIntelligentAssistantResponse(responseStr);
+    }
+
+    /**
+     * 校验智能助手响应
+     */
+    public static boolean checkIntelligentAssistantResponse(final String responseStr) {
+        return JdyUtil.checkIntelligentAssistantResponse(responseStr);
+    }
 }
