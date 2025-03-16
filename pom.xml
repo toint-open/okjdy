@@ -15,31 +15,62 @@
     <artifactId>toint-jdy4j-parent</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
+    <name>toint-jdy4j</name>
+    <description>toint-jdy4j是一个开源的简道云增强框架</description>
+    <url>https://github.com/toint-admin/toint-jdy4j</url>
 
     <modules>
         <module>toint-jdy4j-core</module>
         <module>toint-jdy4j-test</module>
     </modules>
 
+    <developers>
+        <developer>
+            <name>Toint</name>
+            <email>599818663@qq.com</email>
+            <organization>整数软件</organization>
+            <organizationUrl>https://www.toint.cn</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/toint-admin/toint-jdy4j.git</connection>
+        <developerConnection>scm:git:ssh://github.com/toint-admin/toint-jdy4j.git</developerConnection>
+        <url>https://github.com/toint-admin/toint-jdy4j</url>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
     <properties>
-        <revision>1.0.0-SNAPSHOT</revision>
+        <revision>1.0.0-M2</revision>
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!--hutool6-->
+        <!--toint-tool-->
+        <toint-tool.version>1.0.0</toint-tool.version>
+        <!--hutool6.x-->
         <hutool6.version>6.0.0-M20</hutool6.version>
         <!--ttl-->
         <ttl.version>2.14.5</ttl.version>
-        <!--统一更改版本号-->
-        <flatten-maven-plugin.version>1.6.0</flatten-maven-plugin.version>
         <!--okhttp-->
         <okhttp.version>4.12.0</okhttp.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>cn.toint</groupId>
+                <artifactId>toint-tool</artifactId>
+                <version>${toint-tool.version}</version>
+            </dependency>
+
             <!--okhttp-->
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
@@ -54,7 +85,7 @@
                 <version>${ttl.version}</version>
             </dependency>
 
-            <!--hutool6-->
+            <!--hutool6.x-->
             <dependency>
                 <groupId>org.dromara.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
@@ -64,65 +95,94 @@
     </dependencyManagement>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <!--统一更改版本号-->
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>flatten-maven-plugin</artifactId>
-                    <version>${flatten-maven-plugin.version}</version>
-                    <configuration>
-                        <!--是否更新pom文件，记得设置为true，不然无法更新module里的pom版本号-->
-                        <!--此处还有更高级的用法，具体下方的参考文档-->
-                        <!--https://maven.apache.org/maven-ci-friendly.html-->
-                        <updatePomFile>true</updatePomFile>
-                        <flattenMode>resolveCiFriendliesOnly</flattenMode>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>flatten</id>
-                            <phase>process-resources</phase>
-                            <goals>
-                                <goal>flatten</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>flatten.clean</id>
-                            <phase>clean</phase>
-                            <goals>
-                                <goal>clean</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-
-                <!--源码打包插件, 用于在IDE中查看源码文档-->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <executions>
-                        <execution>
-                            <id>attach-sources</id>
-                            <goals>
-                                <goal>jar</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-
         <plugins>
-            <!--源码打包-->
+            <!--推送maven中央仓库-->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.7.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                </configuration>
+            </plugin>
+
+            <!--签名-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.2.7</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <!--统一修改版本号-->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.7.0</version>
+                <configuration>
+                    <!--是否更新pom文件，记得设置为true，不然无法更新module里的pom版本号-->
+                    <!--此处还有更高级的用法，具体下方的参考文档-->
+                    <!--https://maven.apache.org/maven-ci-friendly.html-->
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--源码打包插件, 用于在IDE中查看源码文档-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Javadoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.11.2</version>
+                <configuration>
+                    <doclint>none</doclint>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
