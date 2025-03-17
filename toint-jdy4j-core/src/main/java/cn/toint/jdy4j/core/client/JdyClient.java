@@ -57,7 +57,7 @@ public interface JdyClient extends AutoCloseable {
     /**
      * 执行方法
      *
-     * @param function 执行方法
+     * @param function  执行方法
      * @param autoClose 是否自动关闭资源
      * @return result
      */
@@ -85,7 +85,7 @@ public interface JdyClient extends AutoCloseable {
      * @return result
      */
     default <R> R execThenAutoClose(final Function<JdyClient, R> function) {
-       return this.exec(function, true);
+        return this.exec(function, true);
     }
 
     /**
@@ -115,6 +115,14 @@ public interface JdyClient extends AutoCloseable {
      * @return 简道云配置
      */
     JdyConfigStorage putJdyConfigStorage(final JdyConfigStorage jdyConfigStorage);
+
+    /**
+     * 是否存在简道云配置
+     *
+     * @param corpName 企业名称
+     * @return 是否已存在
+     */
+    boolean containsJdyConfigStorage(final String corpName);
 
     /**
      * 删除配置

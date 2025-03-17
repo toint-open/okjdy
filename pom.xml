@@ -38,6 +38,7 @@
     <modules>
         <module>toint-jdy4j-core</module>
         <module>toint-jdy4j-test</module>
+        <module>toint-jdy4j-web</module>
     </modules>
 
     <developers>

@@ -64,6 +64,11 @@ public class JdyClientImpl implements JdyClient {
     }
 
     @Override
+    public boolean containsJdyConfigStorage(final String corpName) {
+        return this.jdyConfigStorageService.containsJdyConfigStorage(corpName);
+    }
+
+    @Override
     public void deleteJdyConfigStorage(final String corpName) {
         this.jdyConfigStorageService.deleteJdyConfigStorage(corpName);
     }
