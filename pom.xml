@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.3</version>
+        <version>3.4.5</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -64,16 +64,16 @@
     </licenses>
 
     <properties>
-        <revision>1.0.0-M3</revision>
+        <revision>1.0.1</revision>
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!--toint-tool-->
-        <toint-tool.version>1.0.0</toint-tool.version>
+        <toint-tool.version>1.0.1</toint-tool.version>
         <!--hutool6.x-->
-        <hutool6.version>6.0.0-M20</hutool6.version>
+        <hutool6.version>6.0.0-M21</hutool6.version>
         <!--ttl-->
         <ttl.version>2.14.5</ttl.version>
         <!--okhttp-->
