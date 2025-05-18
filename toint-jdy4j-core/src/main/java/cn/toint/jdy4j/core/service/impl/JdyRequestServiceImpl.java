@@ -16,6 +16,8 @@
 
 package cn.toint.jdy4j.core.service.impl;
 
+import cn.toint.jdy4j.core.event.JdyRequestEvent;
+import cn.toint.jdy4j.core.exception.JdyRequestLimitException;
 import cn.toint.jdy4j.core.model.JdyConfigStorage;
 import cn.toint.jdy4j.core.service.JdyConfigStorageService;
 import cn.toint.jdy4j.core.service.JdyRequestService;
@@ -29,12 +31,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.dromara.hutool.core.lang.Assert;
 import org.dromara.hutool.core.text.StrUtil;
-import org.dromara.hutool.core.thread.RetryableTask;
+import org.dromara.hutool.extra.spring.SpringUtil;
 import org.dromara.hutool.http.client.Request;
 import org.dromara.hutool.http.client.Response;
 import org.dromara.hutool.http.meta.HeaderName;
+import org.springframework.lang.NonNull;
 
-import java.time.Duration;
+import java.io.IOException;
 
 /**
  * @author Toint
@@ -67,27 +70,51 @@ public class JdyRequestServiceImpl implements JdyRequestService {
         // 请求方法
         Assert.notNull(request.method(), "method must not be null");
 
-        // 执行请求
-        return RetryableTask.retryForExceptions(() -> this.doRequest(request), Exception.class)
-                .maxAttempts(3)
-                .delay(Duration.ofSeconds(1))
-                .execute()
-                .get()
-                // hutool还不支持读取最后一次异常信息, 已经提了 pr, 暂时先用这个方案代替, 等于会执行4遍
-                // https://gitee.com/chinabugotech/hutool/pulls/1316/files
-                .orElseGet(() -> this.doRequest(request));
+        int maxRetrySize = 3;
+        while (true) {
+            try {
+                 return this.doRequest(request);
+            } catch (JdyRequestLimitException e) {
+                log.error("简道云接口超出频率限制: {}", e.getMessage(), e);
+                maxRetrySize--;
+                if (maxRetrySize == 0) {
+                    throw e;
+                }
+            }
+        }
     }
 
-    private JsonNode doRequest(final Request request) {
+    /**
+     * 执行请求
+     *
+     * @param request 请求信息, 方法内不会对请求信息做任何修改
+     * @return 请求原始结果
+     * @throws JdyRequestLimitException 超出频率
+     * @throws RuntimeException 任何请求异常, 都会抛出异常
+     */
+    private @NonNull JsonNode doRequest(@NonNull final Request request) {
         try (final Response response = request.send(JdyHttpUtil.getClientEngine())) {
+            // 简道云所有 API 使用状态码 + 错误码的响应方式来表示错误原因。
+            // 接口正确统一返回HTTP 状态码为 2xx 的正确响应。
+            // 接口错误则统一返回 HTTP 状态码为 400 的错误响应，同时响应内容会返回错误码（code）和错误信息（msg）
             final String bodyStr = response.bodyStr();
+            SpringUtil.publishEvent(new JdyRequestEvent(request, bodyStr, response.isOk()));
+
+            // 超出频率异常
+            if (JdyHttpUtil.isLimitException(bodyStr)) {
+                log.warn("简道云接口超出频率限制: {}", bodyStr);
+                throw new JdyRequestLimitException(bodyStr);
+            }
+
+            // 其他异常
             if (!response.isOk() || StringUtils.isBlank(bodyStr)) {
-                final String msg = StrUtil.format("请求简道云服务器报错, status: {}, resBody: {}", response.getStatus(), bodyStr);
+                final String msg = StrUtil.format("简道云服务器异常, status: {}, body: {}", response.getStatus(), bodyStr);
                 throw new RuntimeException(msg);
             }
-            // 执行到此说明一切正常, 除非简道云发癫返回的json有问题
+
+            // 执行到此说明一切正常, 除非简道云发癫返回的 json 有问题
             return JacksonUtil.readTree(bodyStr);
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
