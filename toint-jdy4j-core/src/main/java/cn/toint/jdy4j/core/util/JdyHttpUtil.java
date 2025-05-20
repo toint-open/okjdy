@@ -34,10 +34,10 @@ import java.util.Optional;
 public class JdyHttpUtil {
     /**
      * 简道云默认 http 客户端
-     * 服务端3秒内未响应第一次内容则超时报错
+     * 服务端10秒内未响应第一次内容则超时报错
      */
     private static final ClientEngine CLIENT_ENGINE = ClientEngineFactory.createEngine(OkHttpEngine.class.getName())
-            .init(ClientConfig.of().setTimeout(3000));
+            .init(ClientConfig.of().setTimeout(10000));
 
     public static ClientEngine getClientEngine() {
         return JdyHttpUtil.CLIENT_ENGINE;
@@ -50,10 +50,15 @@ public class JdyHttpUtil {
     /**
      * 是否为请求超过频率异常
      *
+     * @param status 响应状态码
      * @param responseBody responseBody
      * @return 是否为请求超过频率异常
      */
-    public static boolean isLimitException(final String responseBody) {
+    public static boolean isLimitException(final int status, final String responseBody) {
+        if (status >= 200 && status < 300) {
+            return false;
+        }
+
         return Optional.ofNullable(responseBody)
                 .map(JacksonUtil::readTree)
                 .map(jsonNode -> jsonNode.get("code"))
