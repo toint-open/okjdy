@@ -64,20 +64,17 @@
     </licenses>
 
     <properties>
-        <revision>1.0.4</revision>
+        <revision>1.0.5</revision>
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!--toint-tool-->
-        <toint-tool.version>1.0.1</toint-tool.version>
-        <!--hutool6.x-->
-        <hutool6.version>6.0.0-M21</hutool6.version>
+        <toint-tool.version>1.0.4</toint-tool.version>
         <!--ttl-->
         <ttl.version>2.14.5</ttl.version>
-        <!--okhttp-->
-        <okhttp.version>4.12.0</okhttp.version>
+
     </properties>
 
     <dependencyManagement>
@@ -88,25 +85,11 @@
                 <version>${toint-tool.version}</version>
             </dependency>
 
-            <!--okhttp-->
-            <dependency>
-                <groupId>com.squareup.okhttp3</groupId>
-                <artifactId>okhttp</artifactId>
-                <version>${okhttp.version}</version>
-            </dependency>
-
             <!--ttl-->
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>transmittable-thread-local</artifactId>
                 <version>${ttl.version}</version>
-            </dependency>
-
-            <!--hutool6.x-->
-            <dependency>
-                <groupId>org.dromara.hutool</groupId>
-                <artifactId>hutool-all</artifactId>
-                <version>${hutool6.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -173,7 +156,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.3.1</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -188,7 +170,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.11.2</version>
                 <configuration>
                     <doclint>none</doclint>
                 </configuration>
