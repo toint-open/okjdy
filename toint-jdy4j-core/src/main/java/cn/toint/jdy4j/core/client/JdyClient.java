@@ -27,6 +27,9 @@ import java.util.function.Function;
 /**
  * 简道云客户端
  *
+ * <p>包含了所有简道云服务能力, 实例由 spring 管理单例</p>
+ * <p>使用客户端前, 请先注册配置: {@link JdyClient#registerJdyConfigStorage(JdyConfigStorage)}</p>
+ *
  * @author Toint
  * @date 2024/10/19
  */
