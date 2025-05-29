@@ -19,10 +19,9 @@ import cn.toint.jdy4j.core.service.*;
 import cn.toint.jdy4j.core.service.impl.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.ClassUtils;
 
 /**
  * @author Toint
@@ -83,17 +82,12 @@ public class JdyAutoConfig {
      * 简道云配置存储缓存
      */
     @Bean
+    @ConditionalOnMissingBean
     public JdyConfigStorageService jdyConfigStorageMapService() {
-        return new JdyConfigStorageMapServiceImpl();
-    }
-
-    /**
-     * 简道云配置存储缓存
-     */
-    @Bean
-    @ConditionalOnClass(StringRedisTemplate.class)
-    @Primary
-    public JdyConfigStorageService jdyConfigStorageRedisService() {
-        return new JdyConfigStorageRedisServiceImpl();
+        if (ClassUtils.isPresent("org.springframework.data.redis.core.StringRedisTemplate", null)) {
+            return new JdyConfigStorageRedisServiceImpl();
+        } else {
+            return new JdyConfigStorageMapServiceImpl();
+        }
     }
 }

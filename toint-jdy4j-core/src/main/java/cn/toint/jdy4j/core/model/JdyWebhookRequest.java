@@ -16,6 +16,9 @@
 package cn.toint.jdy4j.core.model;
 
 import cn.toint.jdy4j.core.enums.JdyWebhookOpEnum;
+import cn.toint.tool.util.JacksonUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 
 /**
@@ -24,11 +27,43 @@ import lombok.Data;
  */
 @Data
 public class JdyWebhookRequest {
+    /**
+     * 推送请求编号, 可以通过该字段完成请求的去重, 防止重复接收同一个事件
+     */
     private String deliverId;
+
+    /**
+     * 事件名称
+     */
     private String op;
-    private Object data;
+
+    /**
+     * 事件时间戳, 精确到毫秒
+     */
+    private Long opTime;
+
+    /**
+     * 推送数据, 可能是表单数据, 也可能是表单结构
+     */
+    private JsonNode data;
 
     public JdyWebhookOpEnum opEnum() {
         return JdyWebhookOpEnum.of(this.op);
+    }
+
+    public <T> T data(final Class<T> valueType) {
+        if (data == null) {
+            return null;
+        }
+
+        return JacksonUtil.treeToValue(this.data, valueType);
+    }
+
+    public <T> T data(final TypeReference<T> toValueTypeRef) {
+        if (data == null) {
+            return null;
+        }
+
+        return JacksonUtil.treeToValue(this.data, toValueTypeRef);
     }
 }

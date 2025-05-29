@@ -27,7 +27,6 @@ import org.dromara.hutool.core.lang.Assert;
 import org.dromara.hutool.extra.validation.ValidationUtil;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
@@ -35,7 +34,6 @@ import java.util.Optional;
  * @author Toint
  * @date 2025/3/3
  */
-@Service
 @Slf4j
 public class JdyConfigStorageRedisServiceImpl implements JdyConfigStorageService {
     /**
