@@ -55,6 +55,16 @@ public interface JdyClient extends AutoCloseable {
     }
 
     /**
+     * 执行方法, 默认关闭资源
+     *
+     * @param function 执行方法
+     * @return result
+     */
+    default <R> R exec(final Function<JdyClient, R> function) {
+        return this.exec(function, true);
+    }
+
+    /**
      * 执行方法
      *
      * @param function  执行方法
