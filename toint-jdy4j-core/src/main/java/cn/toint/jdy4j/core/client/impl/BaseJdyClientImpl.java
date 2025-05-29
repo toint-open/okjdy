@@ -16,23 +16,19 @@
 package cn.toint.jdy4j.core.client.impl;
 
 import cn.toint.jdy4j.core.client.JdyClient;
-import cn.toint.jdy4j.core.model.JdyConfigStorage;
 import cn.toint.jdy4j.core.service.JdyAppService;
 import cn.toint.jdy4j.core.service.JdyConfigStorageService;
 import cn.toint.jdy4j.core.service.JdyDataService;
 import cn.toint.jdy4j.core.service.JdyFileService;
-import cn.toint.jdy4j.core.util.JdyConfigStorageHolder;
-import cn.toint.jdy4j.core.util.JdyWidgetHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.lang.Assert;
 
 /**
  * @author Toint
  * @date 2024/10/19
  */
 @Slf4j
-public class JdyClientImpl implements JdyClient {
+public abstract class BaseJdyClientImpl implements JdyClient {
     /**
      * 简道云配置
      */
@@ -57,41 +53,6 @@ public class JdyClientImpl implements JdyClient {
     @Resource
     private JdyFileService jdyFileService;
 
-
-    @Override
-    public JdyConfigStorage putJdyConfigStorage(final JdyConfigStorage jdyConfigStorage) {
-        return this.jdyConfigStorageService.putJdyConfigStorage(jdyConfigStorage);
-    }
-
-    @Override
-    public boolean containsJdyConfigStorage(final String corpName) {
-        return this.jdyConfigStorageService.containsJdyConfigStorage(corpName);
-    }
-
-    @Override
-    public void deleteJdyConfigStorage(final String corpName) {
-        this.jdyConfigStorageService.deleteJdyConfigStorage(corpName);
-    }
-
-    @Override
-    public boolean switchover(final String corpName) {
-        Assert.notBlank(corpName, "corpName must not be blank");
-
-        // 是否已注册配置
-        if (!this.jdyConfigStorageService.containsJdyConfigStorage(corpName)) {
-            return false;
-        }
-
-        JdyConfigStorageHolder.set(corpName);
-        return true;
-    }
-
-    @Override
-    public JdyClient switchoverTo(final String corpName) {
-        Assert.isTrue(this.switchover(corpName), "当前企业未注册简道云配置");
-        return this;
-    }
-
     @Override
     public JdyAppService getJdyAppService() {
         return this.jdyAppService;
@@ -108,8 +69,7 @@ public class JdyClientImpl implements JdyClient {
     }
 
     @Override
-    public void close() {
-        JdyConfigStorageHolder.remove();
-        JdyWidgetHolder.remove();
+    public JdyConfigStorageService getJdyConfigStorageService() {
+        return this.jdyConfigStorageService;
     }
 }

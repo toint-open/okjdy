@@ -15,18 +15,13 @@
  */
 package cn.toint.jdy4j.core.config;
 
-import cn.toint.jdy4j.core.client.JdyClient;
-import cn.toint.jdy4j.core.client.impl.JdyClientImpl;
 import cn.toint.jdy4j.core.service.*;
 import cn.toint.jdy4j.core.service.impl.*;
-import cn.toint.tool.util.JacksonUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
@@ -36,29 +31,12 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 @AutoConfiguration
 @Slf4j
 public class JdyAutoConfig {
-
-    /**
-     * 简道云客户端
-     */
-    @Bean
-    public JdyClient jdyApiClient() {
-        return new JdyClientImpl();
-    }
-
     /**
      * 简道云请求
      */
     @Bean
     public JdyRequestService jdyRequestService() {
         return new JdyRequestServiceImpl();
-    }
-
-    /**
-     * 简道云配置存储
-     */
-    @Bean
-    public JdyConfigStorageService jdyConfigStorageService() {
-        return new JdyConfigStorageMapServiceImpl();
     }
 
     /**
@@ -114,15 +92,8 @@ public class JdyAutoConfig {
      */
     @Bean
     @ConditionalOnClass(StringRedisTemplate.class)
+    @Primary
     public JdyConfigStorageService jdyConfigStorageRedisService() {
         return new JdyConfigStorageRedisServiceImpl();
-    }
-
-    @Resource
-    private ObjectMapper objectMapper;
-
-    @PostConstruct
-    public void initObj() {
-        JacksonUtil.setObjectMapper(this.objectMapper);
     }
 }

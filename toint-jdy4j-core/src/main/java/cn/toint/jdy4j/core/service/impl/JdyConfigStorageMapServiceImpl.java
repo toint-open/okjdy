@@ -18,8 +18,8 @@ package cn.toint.jdy4j.core.service.impl;
 
 import cn.toint.jdy4j.core.model.JdyConfigStorage;
 import cn.toint.jdy4j.core.service.JdyConfigStorageService;
+import cn.toint.tool.util.Assert;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.lang.Assert;
 import org.dromara.hutool.extra.validation.ValidationUtil;
 
 import java.util.Map;
