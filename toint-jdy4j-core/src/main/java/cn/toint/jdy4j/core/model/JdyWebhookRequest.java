@@ -28,7 +28,7 @@ public class JdyWebhookRequest {
     private String op;
     private Object data;
 
-    public JdyWebhookOpEnum getOpEnum() {
+    public JdyWebhookOpEnum opEnum() {
         return JdyWebhookOpEnum.of(this.op);
     }
 }
