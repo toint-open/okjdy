@@ -25,7 +25,6 @@ import cn.toint.jdy4j.core.util.JdyConfigStorageHolder;
 import cn.toint.jdy4j.core.util.JdyWidgetHolder;
 import cn.toint.tool.util.Assert;
 
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -37,29 +36,6 @@ import java.util.function.Function;
  * @date 2024/10/19
  */
 public interface JdyClient extends AutoCloseable {
-
-    /**
-     * 执行方法, 默认自动关闭资源
-     *
-     * @param consumer 执行方法
-     */
-    default void execute(final Consumer<JdyClient> consumer) {
-        this.execute(consumer, true);
-    }
-
-    /**
-     * 执行方法
-     *
-     * @param consumer  执行方法
-     * @param autoClose 是否自动关闭资源
-     */
-    default void execute(final Consumer<JdyClient> consumer, final boolean autoClose) {
-        this.execute(jdyClient -> {
-            consumer.accept(jdyClient);
-            return null;
-        }, autoClose);
-    }
-
     /**
      * 执行方法, 默认自动关闭资源
      *
