@@ -28,6 +28,8 @@
     </parent>
 
     <artifactId>toint-jdy4j-core</artifactId>
+    <name>toint-jdy4j-core</name>
+    <description>toint-jdy4j 是一个开源的简道云增强框架</description>
 
     <dependencies>
         <dependency>
