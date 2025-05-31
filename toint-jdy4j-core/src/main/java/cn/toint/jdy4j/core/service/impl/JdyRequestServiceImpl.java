@@ -21,16 +21,17 @@ import cn.toint.jdy4j.core.exception.JdyRequestLimitException;
 import cn.toint.jdy4j.core.model.JdyConfigStorage;
 import cn.toint.jdy4j.core.service.JdyConfigStorageService;
 import cn.toint.jdy4j.core.service.JdyRequestService;
-import cn.toint.jdy4j.core.util.JdyHttpUtil;
-import cn.toint.tool.util.JacksonUtil;
 import cn.toint.jdy4j.core.util.JdyConfigStorageHolder;
+import cn.toint.jdy4j.core.util.JdyHttpUtil;
 import cn.toint.jdy4j.core.util.JdyUrlUtil;
+import cn.toint.tool.util.Assert;
+import cn.toint.tool.util.JacksonUtil;
+import cn.toint.tool.util.RetryUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.dromara.hutool.core.date.TimeUtil;
-import org.dromara.hutool.core.lang.Assert;
 import org.dromara.hutool.core.text.StrUtil;
 import org.dromara.hutool.extra.spring.SpringUtil;
 import org.dromara.hutool.http.client.Request;
@@ -73,23 +74,8 @@ public class JdyRequestServiceImpl implements JdyRequestService {
         // 请求方法
         Assert.notNull(request.method(), "method must not be null");
 
-        int maxRetrySize = 3;
-        while (true) {
-            try {
-                return this.doRequest(request);
-            } catch (JdyRequestLimitException e) {
-                // 接口超出频率, 进入重试机制
-                log.error(e.getMessage(), e);
-                maxRetrySize--;
-                if (maxRetrySize == 0) {
-                    throw e;
-                }
-            } catch (Exception e) {
-                // 其他异常, 直接返回
-                log.error(e.getMessage(), e);
-                throw e;
-            }
-        }
+        // 请求与重试
+        return RetryUtil.execute(() -> this.executeRequest(request), JdyHttpUtil.retryPolicies());
     }
 
     /**
@@ -100,7 +86,7 @@ public class JdyRequestServiceImpl implements JdyRequestService {
      * @throws JdyRequestLimitException 超出频率
      * @throws RuntimeException 任何请求异常, 都会抛出异常
      */
-    private @NonNull JsonNode doRequest(@NonNull final Request request) {
+    private @NonNull JsonNode executeRequest(@NonNull final Request request) {
         final JdyRequestEvent.RequestInfo requestInfo = new JdyRequestEvent.RequestInfo();
         requestInfo.setUrl(request.url() == null ? null : request.url().build());
         requestInfo.setMethod(request.method() == null ? null : request.method().name());
