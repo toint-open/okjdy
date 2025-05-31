@@ -16,13 +16,13 @@
 
 package cn.toint.jdy4j.core.service.impl;
 
-import cn.toint.tool.util.JacksonUtil;
 import cn.toint.jdy4j.core.model.JdyGetUploadTokenRequest;
 import cn.toint.jdy4j.core.model.JdyGetUploadTokenResponse;
 import cn.toint.jdy4j.core.model.JdyUrlEnum;
-import cn.toint.jdy4j.core.service.JdyConfigStorageService;
 import cn.toint.jdy4j.core.service.JdyFileService;
 import cn.toint.jdy4j.core.service.JdyRequestService;
+import cn.toint.tool.util.Assert;
+import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.Resource;
@@ -30,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.dromara.hutool.core.collection.CollUtil;
 import org.dromara.hutool.core.io.file.FileUtil;
-import org.dromara.hutool.core.lang.Assert;
 import org.dromara.hutool.extra.validation.ValidationUtil;
 import org.dromara.hutool.http.client.Request;
 import org.dromara.hutool.http.client.body.MultipartBody;
@@ -52,11 +51,6 @@ public class JdyFileServiceImpl implements JdyFileService {
      */
     @Resource
     private JdyRequestService jdyRequestService;
-    /**
-     * 简道云配置存储
-     */
-    @Resource
-    private JdyConfigStorageService jdyConfigStorageService;
 
     @Override
     public List<JdyGetUploadTokenResponse> getUploadToken(final JdyGetUploadTokenRequest getUploadTokenRequest) {
@@ -140,7 +134,7 @@ public class JdyFileServiceImpl implements JdyFileService {
             tokens.addAll(CollUtil.map(this.getUploadToken(getUploadTokenRequest), JdyGetUploadTokenResponse::getToken));
         }
 
-        Assert.isTrue(tokens.size() >= files.size(), "tokens 数量不符合预期, tokensSize: {}, filesSize: {}", tokens.size(), files.size());
+        Assert.isTrue(tokens.size() >= files.size(), "获取的 tokens 数量不足以分配要上传的文件, tokensSize: {}, filesSize: {}", tokens.size(), files.size());
 
         // 用于优雅消耗token
         final LinkedList<String> tokenLinkedList = new LinkedList<>(tokens);
