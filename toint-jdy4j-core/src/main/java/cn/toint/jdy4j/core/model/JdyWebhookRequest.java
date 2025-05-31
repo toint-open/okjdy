@@ -52,7 +52,7 @@ public class JdyWebhookRequest {
     }
 
     public <T> T data(final Class<T> valueType) {
-        if (data == null) {
+        if (JacksonUtil.isNull(this.data)) {
             return null;
         }
 
@@ -60,7 +60,7 @@ public class JdyWebhookRequest {
     }
 
     public <T> T data(final TypeReference<T> toValueTypeRef) {
-        if (data == null) {
+        if (JacksonUtil.isNull(this.data)) {
             return null;
         }
 
