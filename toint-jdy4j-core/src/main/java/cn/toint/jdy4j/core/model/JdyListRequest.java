@@ -15,67 +15,62 @@
  */
 package cn.toint.jdy4j.core.model;
 
+import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.JacksonUtil;
-import cn.toint.jdy4j.core.service.JdyAppService;
-import cn.toint.jdy4j.core.util.JdyWidgetHolder;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.dromara.hutool.core.array.ArrayUtil;
 import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.lang.Assert;
+import org.dromara.hutool.core.func.SerFunction;
 import org.dromara.hutool.core.reflect.ConstructorUtil;
-import org.dromara.hutool.extra.spring.SpringUtil;
 
-import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Toint
  * @date 2025/3/15
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 public class JdyListRequest {
     /**
      * 应用ID
      * 是否必填:是
      */
     @JsonProperty("app_id")
-    @NotBlank
     private String appId;
+
     /**
      * 表单ID
      * 是否必填:是
      */
     @JsonProperty("entry_id")
-    @NotBlank
     private String entryId;
+
     /**
      * 数据ID
      * 是否必填:否
      */
     @JsonProperty("data_id")
     private String dataId;
+
     /**
      * 需要查询的数据字段
      * 是否必填:否
      */
     @JsonProperty("fields")
     private Collection<String> fields;
+
     /**
      * 数据筛选器
      * 是否必填:否
      */
     @JsonProperty("filter")
-    @Valid
     private JdyFilter filter;
+
     /**
      * 查询的数据条数
      * 是否必填:否
@@ -83,395 +78,349 @@ public class JdyListRequest {
     @JsonProperty("limit")
     private Integer limit;
 
+    public JdyListRequest() {
+    }
+
+    @Nonnull
     public static JdyListRequest of() {
         return new JdyListRequest();
     }
 
-    public static JdyListRequest of(final String appId, final String entryId) {
-        final JdyListRequest listRequest = new JdyListRequest();
-        listRequest.setAppId(appId);
-        listRequest.setEntryId(entryId);
-        return listRequest;
-    }
-
-    public static JdyListRequest of(final Object data) {
-        final BaseJdyTable jdyTable = JacksonUtil.convertValue(data, BaseJdyTable.class);
-        return JdyListRequest.of(jdyTable.getAppId(), jdyTable.getEntryId());
-    }
-
     /**
      * 设置查询字段
      */
-    public JdyListRequest select(final Collection<String> fields) {
-        this.fields = Set.copyOf(CollUtil.filter(fields, Objects::nonNull));
-        return this;
-    }
+    @Nonnull
+    public JdyListRequest select(@Nonnull final String... fields) {
+        if (this.fields == null) {
+            this.fields = new HashSet<>();
+        }
 
-    /**
-     * 设置查询字段
-     */
-    public JdyListRequest select(final String... fields) {
-        return this.select(Set.of(ArrayUtil.filter(fields, Objects::nonNull)));
-    }
+        if (ArrayUtil.isNotEmpty(fields)) {
+            this.fields.addAll(Arrays.stream(fields)
+                    .filter(StringUtils::isNotBlank)
+                    .collect(Collectors.toSet()));
+        }
 
-    /**
-     * 设置表信息
-     */
-    public JdyListRequest from(final BaseJdyTable jdyTable) {
-        this.appId = jdyTable.getAppId();
-        this.entryId = jdyTable.getEntryId();
         return this;
     }
 
     /**
      * 设置表信息
      */
-    public JdyListRequest from(Class<? extends BaseJdyTable> clazz) {
+    @Nonnull
+    public JdyListRequest from(@Nonnull final BaseJdyTable jdyTable) {
+        this.from(jdyTable.getAppId(), jdyTable.getEntryId());
+        return this;
+    }
+
+    /**
+     * 设置表信息
+     */
+    @Nonnull
+    public JdyListRequest from(@Nonnull final Class<? extends BaseJdyTable> clazz) {
         final BaseJdyTable jdyTable = ConstructorUtil.newInstance(clazz);
-        this.appId = jdyTable.getAppId();
-        this.entryId = jdyTable.getEntryId();
+        this.from(jdyTable);
         return this;
     }
 
     /**
      * 设置表信息
      */
-    public JdyListRequest from(final String appId, final String entryId) {
+    @Nonnull
+    public JdyListRequest from(@Nonnull final String appId, @Nonnull final String entryId) {
+        Assert.notBlank(appId, "appId must not be blank");
+        Assert.notBlank(entryId, "entryId must not be blank");
         this.appId = appId;
         this.entryId = entryId;
         return this;
     }
 
     /**
-     * 为了适配 sql 语法, 在方法中做了一些初始化操作, 包括调用 api 读取表单信息
+     * 不为空
      */
-    public JdyListRequest where() {
-        // 查询字段信息
-        if (JdyWidgetHolder.get() == null) {
-            final JdyWidgetRequest widgetRequest = new JdyWidgetRequest(this.appId, this.entryId);
-            final JdyWidgetResponse widgetResponse = SpringUtil.getBean(JdyAppService.class).listWidget(widgetRequest);
-            // 缓存表单信息上下文, 在频繁操作表单的时候, 可以避免频繁的通过 api 去读取表单信息
-            // 需要注意: 如果上下文未执行 remove, 此时表单信息发生了改变, 框架无法感知
-            JdyWidgetHolder.set(widgetResponse);
-        }
-
-        if (this.filter == null) {
-            this.filter = new JdyFilter();
-        }
-
-        if (filter.getCondition() == null) {
-            this.filter.setCondition(new HashSet<>());
-        }
-
-        return this;
-    }
-
-    /**
-     * 不为空 isNotNull
-     */
-    public JdyListRequest notEmpty(final String fieldName) {
-        // 初始化操作
-        this.where();
-        // 新的条件
+    @Nonnull
+    public JdyListRequest notEmpty(@Nonnull final String fieldName) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
         final JdyCondition condition = new JdyCondition();
         condition.setField(fieldName);
-        condition.setType(JdyWidgetHolder.getType(fieldName));
         condition.setMethod(JdyMethodEnum.NOT_EMPTY.getValue());
-        this.filter.getCondition().add(condition);
+        this.addCondition(condition);
         return this;
     }
 
     /**
-     * 不为空 isNotNull
+     * 不为空
      */
-    public <T extends Serializable> JdyListRequest notEmpty(final T func) {
+    @Nonnull
+    public <T, R> JdyListRequest notEmpty(@Nonnull final SerFunction<T, R> func) {
         return this.notEmpty(JacksonUtil.getAlias(func));
     }
 
     /**
-     * 为空 isNull
+     * 为空
      */
-    public JdyListRequest empty(final String fieldName) {
-        // 初始化操作
-        this.where();
-        // 新的条件
+    @Nonnull
+    public JdyListRequest empty(@Nonnull final String fieldName) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
         final JdyCondition condition = new JdyCondition();
         condition.setField(fieldName);
-        condition.setType(JdyWidgetHolder.getType(fieldName));
         condition.setMethod(JdyMethodEnum.EMPTY.getValue());
-        this.filter.getCondition().add(condition);
+        this.addCondition(condition);
         return this;
     }
 
     /**
-     * 为空 isNull
+     * 为空
      */
-    public <T extends Serializable> JdyListRequest empty(final T func) {
+    @Nonnull
+    public <T, R> JdyListRequest empty(@Nonnull final SerFunction<T, R> func) {
         return this.empty(JacksonUtil.getAlias(func));
     }
 
     /**
-     * 等于 ==
+     * 等于, value 为空忽略本条件
      */
-    public JdyListRequest eq(final String fieldName, final Object value) {
-        // 初始化操作
-        this.where();
-        // 新的条件
-        final JdyCondition condition = new JdyCondition();
-        condition.setField(fieldName);
-        condition.setType(JdyWidgetHolder.getType(fieldName));
-        condition.setMethod(JdyMethodEnum.EQ.getValue());
-        condition.setValue(Collections.singletonList(value));
-        this.filter.getCondition().add(condition);
+    @Nonnull
+    private JdyListRequest eq(@Nonnull final String fieldName, @Nullable final Object value) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
+
+        if (value != null) {
+            final JdyCondition condition = new JdyCondition();
+            condition.setField(fieldName);
+            condition.setMethod(JdyMethodEnum.EQ.getValue());
+            condition.setValue(List.of(value));
+            this.addCondition(condition);
+        }
+
         return this;
     }
 
     /**
-     * 等于 ==
+     * 等于, value 为空忽略本条件
      */
-    public <T extends Serializable> JdyListRequest eq(final T func, final Object value) {
+    @Nonnull
+    public <T, R> JdyListRequest eq(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
         return this.eq(JacksonUtil.getAlias(func), value);
     }
 
     /**
-     * 等于任意一个
+     * 等于任意一个, value 为空忽略本条件
      */
-    public JdyListRequest in(final String fieldName, final Collection<Object> values) {
-        // 初始化操作
-        this.where();
-        // 最大200个条件
-        CollUtil.partition(Set.copyOf(CollUtil.filter(values, Objects::nonNull)), 200).forEach(item -> {
-            // 新的条件
+    @Nonnull
+    public JdyListRequest in(@Nonnull final String fieldName, @Nullable final Collection<Object> values) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
+        if (CollUtil.isNotEmpty(values)) {
+            final Set<Object> set = values.stream().filter(Objects::nonNull).collect(Collectors.toSet());
+            Assert.isTrue(set.size() <= 200, "条件参数最多可传递200个");
             final JdyCondition condition = new JdyCondition();
             condition.setField(fieldName);
-            condition.setType(JdyWidgetHolder.getType(fieldName));
-            condition.setMethod(JdyMethodEnum.IN.getValue());
-            condition.setValue(item);
-            this.filter.getCondition().add(condition);
-        });
+            condition.setValue(set);
+            this.addCondition(condition);
+        }
         return this;
     }
 
     /**
-     * 等于任意一个
+     * 等于任意一个, value 为空忽略本条件
      */
-    public JdyListRequest in(final String fieldName, final Object... value) {
-        return this.in(fieldName, Set.of(ArrayUtil.filter(value, Objects::nonNull)));
-    }
-
-    /**
-     * 等于任意一个
-     */
-    public <T extends Serializable> JdyListRequest in(final T func, final Collection<Object> value) {
+    @Nonnull
+    public <T, R> JdyListRequest in(@Nonnull final SerFunction<T, R> func, @Nullable final Collection<Object> value) {
         return this.in(JacksonUtil.getAlias(func), value);
     }
 
     /**
-     * 等于任意一个
+     * 范围,包含x和y本身, xy 都为 null 忽略本条件
      */
-    public <T extends Serializable> JdyListRequest in(final T func, final Object... value) {
-        return this.in(JacksonUtil.getAlias(func), value);
-    }
-
-    /**
-     * 范围,包含x和y本身
-     */
-    public JdyListRequest range(final String fieldName, final Object x, final Object y) {
-        // 初始化操作
-        this.where();
-        // 新的条件
-        final JdyCondition condition = new JdyCondition();
-        condition.setField(fieldName);
-        condition.setType(JdyWidgetHolder.getType(fieldName));
-        condition.setMethod(JdyMethodEnum.RANGE.getValue());
-        condition.setValue(Arrays.asList(x, y)); // asList可以包含null
-        this.filter.getCondition().add(condition);
+    @Nonnull
+    public JdyListRequest range(@Nonnull final String fieldName, @Nullable final Object x, @Nullable final Object y) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
+        if (x != null || y != null) {
+            final JdyCondition condition = new JdyCondition();
+            condition.setField(fieldName);
+            condition.setMethod(JdyMethodEnum.RANGE.getValue());
+            condition.setValue(Arrays.asList(x, y));
+            this.addCondition(condition);
+        }
         return this;
     }
 
     /**
-     * 范围,包含x和y本身
+     * 范围,包含x和y本身, xy 都为 null 忽略本条件
      */
-    public <T extends Serializable> JdyListRequest range(final T func, final Object x, final Object y) {
+    @Nonnull
+    public <T, R> JdyListRequest range(@Nonnull final SerFunction<T, R> func, @Nullable final Object x, @Nullable final Object y) {
         return this.range(JacksonUtil.getAlias(func), x, y);
     }
 
     /**
-     * 大于等于 >=
+     * 大于等于 >=, value 为 null 忽略本条件
      */
-    public JdyListRequest ge(final String fieldName, final Object value) {
-        // 如果value为null,会改变语意
-        Assert.notNull(value, "value must not be null");
-        return this.range(fieldName, value, null);
+    @Nonnull
+    public JdyListRequest ge(@Nonnull final String fieldName, @Nullable final Object value) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
+        if (value != null) {
+            this.range(fieldName, value, null);
+        }
+        return this;
     }
 
     /**
-     * 大于等于 >=
+     * 大于等于 >=, value 为 null 忽略本条件
      */
-    public <T extends Serializable> JdyListRequest ge(final T func, final Object value) {
-        // 如果value为null,会改变语意
-        Assert.notNull(value, "value must not be null");
-        return this.range(func, value, null);
+    @Nonnull
+    public <T, R> JdyListRequest ge(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
+        if (value != null) {
+            this.range(func, value, null);
+        }
+        return this;
     }
 
     /**
-     * 小于等于 <=
+     * 小于等于 <=, value 为 null 忽略本条件
      */
-    public JdyListRequest le(final String fieldName, final Object value) {
-        // 如果value为null,会改变语意
-        Assert.notNull(value, "value must not be null");
-        return this.range(fieldName, null, value);
+    @Nonnull
+    public JdyListRequest le(@Nonnull final String fieldName, @Nullable final Object value) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
+        if (value != null) {
+            this.range(fieldName, null, value);
+        }
+        return this;
     }
 
     /**
-     * 小于等于 <=
+     * 小于等于 <=, value 为 null 忽略本条件
      */
-    public <T extends Serializable> JdyListRequest le(final T func, final Object value) {
-        // 如果value为null,会改变语意
-        Assert.notNull(value, "value must not be null");
-        return this.range(func, null, value);
+    @Nonnull
+    public <T, R> JdyListRequest le(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
+        if (value != null) {
+            return this.range(func, null, value);
+        }
+        return this;
     }
 
     /**
-     * 不等于任意一个
+     * 不等于任意一个, value 为 null 忽略本条件
      */
-    public JdyListRequest notIn(final String fieldName, final Collection<Object> value) {
-        // 初始化操作
-        this.where();
-        // 最大200个条件
-        CollUtil.partition(Set.copyOf(CollUtil.filter(value, Objects::nonNull)), 200).forEach(item -> {
-            // 新的条件
+    @Nonnull
+    public JdyListRequest notIn(@Nonnull final String fieldName, @Nullable final Collection<Object> value) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
+        if (CollUtil.isNotEmpty(value)) {
+            final Set<Object> set = value.stream().filter(Objects::nonNull).collect(Collectors.toSet());
+            Assert.isTrue(set.size() <= 200, "条件参数最多可传递200个");
             final JdyCondition condition = new JdyCondition();
             condition.setField(fieldName);
-            condition.setType(JdyWidgetHolder.getType(fieldName));
             condition.setMethod(JdyMethodEnum.NIN.getValue());
-            condition.setValue(item);
-            this.filter.getCondition().add(condition);
-        });
+            condition.setValue(set);
+            this.addCondition(condition);
+        }
         return this;
     }
 
     /**
-     * 不等于任意一个
+     * 不等于任意一个, value 为 null 忽略本条件
      */
-    public JdyListRequest notIn(final String fieldName, final Object... value) {
-        return this.notIn(fieldName, Set.of(ArrayUtil.filter(value, Objects::nonNull)));
-    }
-
-    /**
-     * 不等于任意一个
-     */
-    public <T extends Serializable> JdyListRequest notIn(final T func, final Collection<Object> value) {
+    @Nonnull
+    public <T, R> JdyListRequest notIn(@Nonnull final SerFunction<T, R> func, @Nullable final Collection<Object> value) {
         return this.notIn(JacksonUtil.getAlias(func), value);
     }
 
     /**
-     * 不等于任意一个
+     * 不等于 !=, value 为 null 忽略本条件
      */
-    public <T extends Serializable> JdyListRequest notIn(final T func, final Object... value) {
-        return this.notIn(JacksonUtil.getAlias(func), value);
-    }
-
-    /**
-     * 不等于 !=
-     */
-    public JdyListRequest ne(final String fieldName, final Object value) {
-        // 初始化操作
-        this.where();
-        // 新的条件
-        final JdyCondition condition = new JdyCondition();
-        condition.setField(fieldName);
-        condition.setType(JdyWidgetHolder.getType(fieldName));
-        condition.setMethod(JdyMethodEnum.NE.getValue());
-        condition.setValue(Collections.singletonList(value));
-        this.filter.getCondition().add(condition);
+    @Nonnull
+    public JdyListRequest ne(@Nonnull final String fieldName, @Nullable final Object value) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
+        if (value != null) {
+            final JdyCondition condition = new JdyCondition();
+            condition.setField(fieldName);
+            condition.setMethod(JdyMethodEnum.NE.getValue());
+            condition.setValue(List.of(value));
+            this.addCondition(condition);
+        }
         return this;
     }
 
     /**
-     * 不等于 !=
+     * 不等于 !=, value 为 null 忽略本条件
      */
-    public <T extends Serializable> JdyListRequest ne(final T func, final Object value) {
+    @Nonnull
+    public <T, R> JdyListRequest ne(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
         return this.ne(JacksonUtil.getAlias(func), value);
     }
 
     /**
-     * 包含 like
+     * 包含 like, value 为 null 忽略本条件
      */
-    public JdyListRequest like(final String fieldName, final Object value) {
-        // 初始化操作
-        this.where();
-        // 新的条件
-        final JdyCondition condition = new JdyCondition();
-        condition.setField(fieldName);
-        condition.setType(JdyWidgetHolder.getType(fieldName));
-        condition.setMethod(JdyMethodEnum.LIKE.getValue());
-        condition.setValue(Collections.singletonList(value));
-        this.filter.getCondition().add(condition);
+    @Nonnull
+    public JdyListRequest like(@Nonnull final String fieldName, @Nullable final Object value) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
+        if (value != null) {
+            final JdyCondition condition = new JdyCondition();
+            condition.setField(fieldName);
+            condition.setMethod(JdyMethodEnum.LIKE.getValue());
+            condition.setValue(List.of(value));
+            this.addCondition(condition);
+        }
         return this;
     }
 
     /**
      * 包含 like
      */
-    public <T extends Serializable> JdyListRequest like(final T func, final Object value) {
+    @Nonnull
+    public <T, R> JdyListRequest like(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
         return this.like(JacksonUtil.getAlias(func), value);
     }
 
     /**
      * 表示填写了手机号且已验证的值
      */
-    public JdyListRequest verified(final String fieldName, final Object value) {
-        // 初始化操作
-        this.where();
-        // 新的条件
+    @Nonnull
+    public JdyListRequest verified(@Nonnull final String fieldName) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
         final JdyCondition condition = new JdyCondition();
         condition.setField(fieldName);
-        condition.setType(JdyWidgetHolder.getType(fieldName));
         condition.setMethod(JdyMethodEnum.VERIFIED.getValue());
-        condition.setValue(Collections.singletonList(value));
-        this.filter.getCondition().add(condition);
+        this.addCondition(condition);
         return this;
     }
 
     /**
      * 表示填写了手机号且已验证的值
      */
-    public <T extends Serializable> JdyListRequest verified(final T func, final Object value) {
-        return this.verified(JacksonUtil.getAlias(func), value);
+    @Nonnull
+    public <T, R> JdyListRequest verified(@Nonnull final SerFunction<T, R> func) {
+        return this.verified(JacksonUtil.getAlias(func));
     }
 
     /**
      * 表示填写了手机号但未验证值
      */
-    public JdyListRequest unverified(final String fieldName, final Object value) {
-        // 初始化操作
-        this.where();
-        // 新的条件
+    @Nonnull
+    public JdyListRequest unverified(@Nonnull final String fieldName) {
+        Assert.notBlank(fieldName, "fieldName must not be blank");
         final JdyCondition condition = new JdyCondition();
         condition.setField(fieldName);
-        condition.setType(JdyWidgetHolder.getType(fieldName));
         condition.setMethod(JdyMethodEnum.UNVERIFIED.getValue());
-        condition.setValue(Collections.singletonList(value));
-        this.filter.getCondition().add(condition);
+        this.addCondition(condition);
         return this;
     }
 
     /**
      * 表示填写了手机号但未验证值
      */
-    public <T extends Serializable> JdyListRequest unverified(final T func, final Object value) {
-        return this.unverified(JacksonUtil.getAlias(func), value);
+    @Nonnull
+    public <T, R> JdyListRequest unverified(@Nonnull final SerFunction<T, R> func) {
+        return this.unverified(JacksonUtil.getAlias(func));
     }
 
     /**
      * 筛选组合关系
      * 注意:简道云不支持and和or同时使用,所以当前方法只会覆盖原有条件,如果多次调用,只会使用最后一次覆盖的值
      */
+    @Nonnull
     public JdyListRequest and() {
-        // 初始化操作
-        this.where();
-
+        this.initFilter();
         this.filter.setRelationship(JdyRelationshipEnum.AND.getValue());
         return this;
     }
@@ -480,10 +429,9 @@ public class JdyListRequest {
      * 筛选组合关系
      * 注意:简道云不支持and和or同时使用,所以当前方法只会覆盖原有条件,如果多次调用,只会使用最后一次覆盖的值
      */
+    @Nonnull
     public JdyListRequest or() {
-        // 初始化操作
-        this.where();
-
+        this.initFilter();
         this.filter.setRelationship(JdyRelationshipEnum.OR.getValue());
         return this;
     }
@@ -491,11 +439,28 @@ public class JdyListRequest {
     /**
      * 查询数量
      */
-    public JdyListRequest limit(final Integer limit) {
-        // 初始化操作
-        this.where();
+    @Nonnull
+    public JdyListRequest limit(final int limit) {
         this.limit = limit;
         return this;
+    }
+
+    private void addCondition(final JdyCondition jdyCondition) {
+        this.initFilter();
+        this.filter.getCondition().add(jdyCondition);
+    }
+
+    /**
+     * 初始化 filter, 确保 filter 和 condition 不为空
+     */
+    private void initFilter() {
+        if (this.filter == null) {
+            this.filter = new JdyFilter();
+        }
+
+        if (this.filter.getCondition() == null) {
+            this.filter.setCondition(new HashSet<>());
+        }
     }
 
 }
