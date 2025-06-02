@@ -108,10 +108,12 @@ public class JdyDo implements Serializable {
 
     private void init() {
         final JdyTable jdyTable = AnnotationUtil.getAnnotation(this.getClass(), JdyTable.class);
-        Assert.notNull(jdyTable, "jdyTable must not be null");
-        this.appId = jdyTable.appId();
-        this.entryId = jdyTable.entryId();
-        Assert.notBlank(this.appId, "appId must not be blank");
-        Assert.notBlank(this.entryId, "entryId must not be blank");
+        // 不能强制赋值, 否则 Json 反序列化的时候可能会有问题
+        if (jdyTable != null) {
+            this.appId = jdyTable.appId();
+            this.entryId = jdyTable.entryId();
+            Assert.notBlank(this.appId, "appId must not be blank");
+            Assert.notBlank(this.entryId, "entryId must not be blank");
+        }
     }
 }

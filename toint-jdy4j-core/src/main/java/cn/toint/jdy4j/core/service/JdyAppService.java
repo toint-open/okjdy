@@ -31,30 +31,30 @@ public interface JdyAppService {
     /**
      * 用户全量应用查询接口
      */
-    List<JdyAppResponse> listAllApp();
+    List<JdyApp> listAllApp();
 
     /**
      * 用户应用查询接口
      */
-    List<JdyAppResponse> listApp(JdyAppRequest appRequest);
+    List<JdyApp> listApp(JdyAppListRequest appRequest);
 
     /**
      * 用户全量表单查询接口
      */
-    List<JdyEntryResponse> listAllEntry(String appId);
+    List<JdyEntry> listAllEntry(String appId);
 
     /**
      * 用户表单查询接口
      */
-    List<JdyEntryResponse> listEntry(JdyEntryRequest entryRequest);
+    List<JdyEntry> listEntry(JdyEntryListRequest entryRequest);
 
     /**
      * 表单字段查询接口
      */
-    JdyWidgetResponse listWidget(JdyWidgetRequest widgetRequest);
+    JdyFieldListResponse listWidget(JdyFieldListRequest widgetRequest);
 
     /**
      * 表单字段查询接口
      */
-    JdyWidgetResponse listWidget(JdyDo jdyTable);
+    JdyFieldListResponse listWidget(JdyDo jdyTable);
 }

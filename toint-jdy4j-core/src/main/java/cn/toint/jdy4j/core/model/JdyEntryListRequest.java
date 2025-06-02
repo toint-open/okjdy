@@ -17,28 +17,31 @@ package cn.toint.jdy4j.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-/**
- * @author Toint
- * @date 2025/3/15
- */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class JdyWidgetRequest {
+public class JdyEntryListRequest {
     /**
-     * 应用id
+     * 应用ID。
      */
-    @NotBlank
     @JsonProperty("app_id")
+    @NotBlank
     private String appId;
     /**
-     * 表单id
+     *数据条数
      */
-    @NotBlank
-    @JsonProperty("entry_id")
-    private String entryId;
+    @JsonProperty("limit")
+    private int limit = 100;
+    /**
+     * 需要跳过的数据条数，默认 0 。
+     */
+    @JsonProperty("skip")
+    private int skip = 0;
+
+    public JdyEntryListRequest() {
+    }
+
+    public JdyEntryListRequest(final String appId) {
+        this.appId = appId;
+    }
 }

@@ -15,33 +15,30 @@
  */
 package cn.toint.jdy4j.core.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.List;
+
+/**
+ * @author Toint
+ * @date 2025/3/15
+ */
 @Data
-public class JdyEntryRequest {
+public class JdyField {
     /**
-     * 应用ID。
+     * 字段标题
      */
-    @JsonProperty("app_id")
-    @NotBlank
-    private String appId;
+    private String label;
     /**
-     *数据条数
+     * 字段名（设置了字段别名则采用别名，未设置则采用字段ID）
      */
-    @JsonProperty("limit")
-    private int limit = 100;
+    private String name;
     /**
-     * 需要跳过的数据条数，默认 0 。
+     * 字段类型；每种字段类型都有对应的数据类型
      */
-    @JsonProperty("skip")
-    private int skip = 0;
-
-    public JdyEntryRequest() {
-    }
-
-    public JdyEntryRequest(final String appId) {
-        this.appId = appId;
-    }
+    private String type;
+    /**
+     * 子表单
+     */
+    private List<JdyField> items;
 }

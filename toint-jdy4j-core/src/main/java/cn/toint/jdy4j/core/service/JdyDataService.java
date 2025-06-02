@@ -61,7 +61,7 @@ public interface JdyDataService {
      * @param predicate   predicate, 入参: 请求参数, 返回: boolean, true: addAll, false: 忽略结果
      * @return 数据列表
      */
-    ArrayNode list(JdyListRequest listRequest, Predicate<ArrayNode> predicate);
+    ArrayNode list(JdyListDataRequest listRequest, Predicate<ArrayNode> predicate);
 
     /**
      * 查询数据列表
@@ -76,23 +76,7 @@ public interface JdyDataService {
      * @param listRequest listRequest
      * @return 数据列表
      */
-    ArrayNode list(JdyListRequest listRequest);
-
-    /**
-     * 查询数据列表
-     * 该接口的返回数据，始终按照数据 ID 正序排列。
-     * 若要设置循环调取数据，可以利用 data_id 字段来设置参数避免调取重复数据。
-     * 如需要查询 230 条数据：
-     * 第一次查询时可以不传 data_id 字段，若设置 limit 为 100 ，则第一次返回了前 100 条数据；
-     * 第二次，用第 100 条数据的 data_id 进行查询，若设置 limit 为100，则第二次返回 101～200 这 100 条数据；
-     * 第三次，用第 200 条数据的 data_id 进行查询，若设置 limit 为100，则第三次返回 201～230 这 30 条数据。
-     * 由于第三次返回结果只有 30 条，未达到设置的 limit 上限100，则说明查询结束。
-     *
-     * @param listRequest listRequest
-     * @param predicate   predicate, 入参: 请求参数, 返回: boolean, true: addAll, false: 忽略结果
-     * @return 数据列表
-     */
-    <T> List<T> list(JdyListRequest listRequest, Class<T> toValueItemType, Predicate<ArrayNode> predicate);
+    ArrayNode list(JdyListDataRequest listRequest);
 
     /**
      * 查询数据列表
@@ -108,7 +92,23 @@ public interface JdyDataService {
      * @param predicate   predicate, 入参: 请求参数, 返回: boolean, true: addAll, false: 忽略结果
      * @return 数据列表
      */
-    <T> List<T> list(JdyListRequest listRequest, TypeReference<T> toValueTypeRef, Predicate<ArrayNode> predicate);
+    <T> List<T> list(JdyListDataRequest listRequest, Class<T> toValueItemType, Predicate<ArrayNode> predicate);
+
+    /**
+     * 查询数据列表
+     * 该接口的返回数据，始终按照数据 ID 正序排列。
+     * 若要设置循环调取数据，可以利用 data_id 字段来设置参数避免调取重复数据。
+     * 如需要查询 230 条数据：
+     * 第一次查询时可以不传 data_id 字段，若设置 limit 为 100 ，则第一次返回了前 100 条数据；
+     * 第二次，用第 100 条数据的 data_id 进行查询，若设置 limit 为100，则第二次返回 101～200 这 100 条数据；
+     * 第三次，用第 200 条数据的 data_id 进行查询，若设置 limit 为100，则第三次返回 201～230 这 30 条数据。
+     * 由于第三次返回结果只有 30 条，未达到设置的 limit 上限100，则说明查询结束。
+     *
+     * @param listRequest listRequest
+     * @param predicate   predicate, 入参: 请求参数, 返回: boolean, true: addAll, false: 忽略结果
+     * @return 数据列表
+     */
+    <T> List<T> list(JdyListDataRequest listRequest, TypeReference<T> toValueTypeRef, Predicate<ArrayNode> predicate);
 
     /**
      * 查询数据列表
@@ -123,7 +123,7 @@ public interface JdyDataService {
      * @param listRequest listRequest
      * @return 数据列表
      */
-    <T> List<T> list(JdyListRequest listRequest, Class<T> toValueItemType);
+    <T> List<T> list(JdyListDataRequest listRequest, Class<T> toValueItemType);
 
     /**
      * 查询数据列表
@@ -138,7 +138,7 @@ public interface JdyDataService {
      * @param listRequest listRequest
      * @return 数据列表
      */
-    <T> List<T> list(JdyListRequest listRequest, TypeReference<T> toValueTypeRef);
+    <T> List<T> list(JdyListDataRequest listRequest, TypeReference<T> toValueTypeRef);
 
     /**
      * 新增一条数据
@@ -182,7 +182,7 @@ public interface JdyDataService {
      * @param data 转换前数据,输入的键值对中,当value为空值,简道云会清除当前属性值
      * @return 转换后数据
      */
-    ObjectNode convert(JsonNode data, JdyWidgetResponse widgetResponse);
+    ObjectNode convert(JsonNode data, JdyFieldListResponse widgetResponse);
 
     /**
      * 转换请求数据格式

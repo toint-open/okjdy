@@ -58,6 +58,7 @@ public class JdyCondition {
 
     /**
      * 过滤值
+     * 集合可能 null, 但元素一定非 null
      */
     @JsonProperty("value")
     private Collection<Object> value;

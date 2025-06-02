@@ -18,11 +18,8 @@ package cn.toint.jdy4j.core.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
-/**
- * app
- */
 @Data
-public class JdyAppResponse {
+public class JdyApp {
     /**
      * 应用名称
      */

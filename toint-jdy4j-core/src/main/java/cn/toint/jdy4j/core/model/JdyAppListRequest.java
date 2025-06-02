@@ -18,7 +18,7 @@ package cn.toint.jdy4j.core.model;
 import lombok.Data;
 
 @Data
-public class JdyAppRequest {
+public class JdyAppListRequest {
     /**
      * 数据条数
      */

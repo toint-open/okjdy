@@ -2,6 +2,7 @@ package cn.toint.jdy4j.core.client.impl;
 
 import cn.toint.jdy4j.core.client.JdyClient;
 import cn.toint.jdy4j.core.client.JdyClientConfig;
+import cn.toint.jdy4j.core.enums.JdyFieldTypeEnum;
 import cn.toint.jdy4j.core.enums.JdyUrlEnum;
 import cn.toint.jdy4j.core.event.JdyRequestEvent;
 import cn.toint.jdy4j.core.exception.JdyRequestLimitException;
@@ -18,6 +19,8 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.dromara.hutool.core.collection.CollUtil;
+import org.dromara.hutool.core.convert.ConvertUtil;
 import org.dromara.hutool.core.date.TimeUtil;
 import org.dromara.hutool.core.net.url.UrlBuilder;
 import org.dromara.hutool.core.net.url.UrlQuery;
@@ -29,12 +32,10 @@ import org.springframework.http.HttpHeaders;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * @author Toint
@@ -54,17 +55,17 @@ public class JdyClientImpl implements JdyClient {
 
     @Nonnull
     @Override
-    public List<JdyAppResponse> listApp(@Nonnull final JdyAppRequest jdyAppRequest) {
-        Assert.notNull(jdyAppRequest, "jdyAppRequest must not be null");
+    public List<JdyApp> listApp(@Nonnull final JdyAppListRequest jdyAppListRequest) {
+        Assert.notNull(jdyAppListRequest, "jdyAppRequest must not be null");
 
         // 单次最大数量
         final int onceSize = 100;
-        final AtomicInteger limit = new AtomicInteger(jdyAppRequest.getLimit());
-        final AtomicInteger skip = new AtomicInteger(jdyAppRequest.getSkip());
-        final List<JdyAppResponse> response = new ArrayList<>();
+        final AtomicInteger limit = new AtomicInteger(jdyAppListRequest.getLimit());
+        final AtomicInteger skip = new AtomicInteger(jdyAppListRequest.getSkip());
+        final List<JdyApp> response = new ArrayList<>();
 
         while (true) {
-            final JdyAppRequest reqBody = new JdyAppRequest();
+            final JdyAppListRequest reqBody = new JdyAppListRequest();
             reqBody.setLimit(Math.min(limit.get(), onceSize));
             reqBody.setSkip(skip.get());
 
@@ -73,11 +74,11 @@ public class JdyClientImpl implements JdyClient {
                     .body(JacksonUtil.writeValueAsString(reqBody));
 
             final String resBody = this.request(request);
-            final List<JdyAppResponse> apps = Optional.ofNullable(resBody)
-                    .filter(StringUtils::isNotBlank)
+            final List<JdyApp> apps = Optional.of(resBody)
                     .map(JacksonUtil::readTree)
                     .map(jsonNode -> jsonNode.path("apps"))
-                    .map(jsonNode -> JacksonUtil.treeToValue(jsonNode, new TypeReference<List<JdyAppResponse>>() {
+                    .filter(JsonNode::isArray)
+                    .map(jsonNode -> JacksonUtil.treeToValue(jsonNode, new TypeReference<List<JdyApp>>() {
                     }))
                     .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
 
@@ -95,18 +96,18 @@ public class JdyClientImpl implements JdyClient {
 
     @Nonnull
     @Override
-    public List<JdyEntryResponse> listEntry(@Nonnull final JdyEntryRequest jdyEntryRequest) {
-        Assert.validate(jdyEntryRequest, "jdyEntryRequest valid error, cause: {}");
+    public List<JdyEntry> listEntry(@Nonnull final JdyEntryListRequest jdyEntryListRequest) {
+        Assert.validate(jdyEntryListRequest, "jdyEntryRequest valid error, cause: {}");
 
         // 单次最大数量
         final int onceSize = 100;
-        final AtomicInteger limit = new AtomicInteger(jdyEntryRequest.getLimit());
-        final AtomicInteger skip = new AtomicInteger(jdyEntryRequest.getSkip());
-        final List<JdyEntryResponse> response = new ArrayList<>();
+        final AtomicInteger limit = new AtomicInteger(jdyEntryListRequest.getLimit());
+        final AtomicInteger skip = new AtomicInteger(jdyEntryListRequest.getSkip());
+        final List<JdyEntry> response = new ArrayList<>();
 
         while (true) {
-            final JdyEntryRequest reqBody = new JdyEntryRequest();
-            reqBody.setAppId(jdyEntryRequest.getAppId());
+            final JdyEntryListRequest reqBody = new JdyEntryListRequest();
+            reqBody.setAppId(jdyEntryListRequest.getAppId());
             reqBody.setLimit(Math.min(limit.get(), onceSize));
             reqBody.setSkip(skip.get());
 
@@ -115,11 +116,12 @@ public class JdyClientImpl implements JdyClient {
                     .body(JacksonUtil.writeValueAsString(reqBody));
 
             final String resBody = this.request(request);
-            final List<JdyEntryResponse> forms = Optional.ofNullable(resBody)
+            final List<JdyEntry> forms = Optional.of(resBody)
                     .filter(StringUtils::isNotBlank)
                     .map(JacksonUtil::readTree)
                     .map(jsonNode -> jsonNode.path("forms"))
-                    .map(jsonNode -> JacksonUtil.treeToValue(jsonNode, new TypeReference<List<JdyEntryResponse>>() {
+                    .filter(JsonNode::isArray)
+                    .map(jsonNode -> JacksonUtil.treeToValue(jsonNode, new TypeReference<List<JdyEntry>>() {
                     }))
                     .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
 
@@ -136,34 +138,51 @@ public class JdyClientImpl implements JdyClient {
     }
 
     @Override
-    public @Nonnull JsonNode listData(final @Nonnull JdyListRequest jdyListRequest) {
-        return this.listData(jdyListRequest, jsonNode -> true);
+    public @Nonnull JdyFieldListResponse listField(@Nonnull final JdyFieldListRequest jdyFieldListRequest) {
+        Assert.validate(jdyFieldListRequest, "jdyFieldListRequest valid error, cause: {}");
+
+        final Request request = Request.of(JdyUrlEnum.LIST_WIDGET.getUrl())
+                .method(JdyUrlEnum.LIST_WIDGET.getMethod())
+                .body(JacksonUtil.writeValueAsString(jdyFieldListRequest));
+
+        final String resBody = this.request(request);
+        return Optional.of(resBody)
+                .map(str -> JacksonUtil.readValue(str, JdyFieldListResponse.class))
+                .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+    }
+
+    @Override
+    public @Nonnull JsonNode listData(final @Nonnull JdyListDataRequest jdyListDataRequest) {
+        return this.listData(jdyListDataRequest, jsonNode -> true);
     }
 
     @Nonnull
     @Override
-    public <T extends JdyDo> List<T> listData(@Nonnull final JdyListRequest jdyListRequest, @Nonnull final Class<T> responseType) {
-        return this.listData(jdyListRequest, responseType, jsonNode -> true);
+    public <T extends JdyDo> List<T> listData(@Nonnull final JdyListDataRequest jdyListDataRequest, @Nonnull final Class<T> responseType) {
+        return this.listData(jdyListDataRequest, responseType, jsonNode -> true);
     }
 
     @Override
     @Nonnull
-    public JsonNode listData(final @Nonnull JdyListRequest jdyListRequest, final @Nullable Predicate<JsonNode> predicate) {
-        Assert.validate(jdyListRequest, "jdyListRequest valid error, cause: {}");
+    public JsonNode listData(final @Nonnull JdyListDataRequest jdyListDataRequest, final @Nullable Predicate<JsonNode> predicate) {
+        Assert.validate(jdyListDataRequest, "jdyListRequest valid error, cause: {}");
+
+        // 转换字段, 数字和字符串需要严格区分, 根据简道云字段类型判断
+        this.convertConditionFieldValue(jdyListDataRequest);
 
         // 单次最大数量
         final int onceSize = 100;
-        final AtomicInteger limit = new AtomicInteger(jdyListRequest.getLimit());
+        final AtomicInteger limit = new AtomicInteger(jdyListDataRequest.getLimit());
         final ArrayNode response = JacksonUtil.createArrayNode();
-        String dataId = jdyListRequest.getDataId();
+        String dataId = jdyListDataRequest.getDataId();
 
         while (true) {
-            final JdyListRequest reqBody = new JdyListRequest();
-            reqBody.setAppId(jdyListRequest.getAppId());
-            reqBody.setEntryId(jdyListRequest.getEntryId());
+            final JdyListDataRequest reqBody = new JdyListDataRequest();
+            reqBody.setAppId(jdyListDataRequest.getAppId());
+            reqBody.setEntryId(jdyListDataRequest.getEntryId());
             reqBody.setDataId(dataId);
-            reqBody.setFields(jdyListRequest.getFields());
-            reqBody.setFilter(jdyListRequest.getFilter());
+            reqBody.setFields(jdyListDataRequest.getFields());
+            reqBody.setFilter(jdyListDataRequest.getFilter());
             reqBody.setLimit(Math.min(limit.get(), onceSize));
 
             final Request request = Request.of(JdyUrlEnum.LIST_DATA.getUrl())
@@ -171,8 +190,7 @@ public class JdyClientImpl implements JdyClient {
                     .body(JacksonUtil.writeValueAsString(reqBody));
 
             final String resBody = this.request(request);
-            final JsonNode data = Optional.ofNullable(resBody)
-                    .filter(StringUtils::isNotBlank)
+            final JsonNode data = Optional.of(resBody)
                     .map(JacksonUtil::readTree)
                     .map(jsonNode -> jsonNode.path("data"))
                     .filter(JsonNode::isArray)
@@ -209,10 +227,10 @@ public class JdyClientImpl implements JdyClient {
 
     @Nonnull
     @Override
-    public <T extends JdyDo> List<T> listData(@Nonnull final JdyListRequest jdyListRequest, @Nonnull final Class<T> responseType, @Nullable final Predicate<JsonNode> predicate) {
+    public <T extends JdyDo> List<T> listData(@Nonnull final JdyListDataRequest jdyListDataRequest, @Nonnull final Class<T> responseType, @Nullable final Predicate<JsonNode> predicate) {
         Assert.notNull(responseType, "responseType must not be null");
         final List<T> response = new ArrayList<>();
-        for (final JsonNode item : this.listData(jdyListRequest, predicate)) {
+        for (final JsonNode item : this.listData(jdyListDataRequest, predicate)) {
             response.add(JacksonUtil.treeToValue(item, responseType));
         }
         return response;
@@ -302,5 +320,58 @@ public class JdyClientImpl implements JdyClient {
         return jsonNode.path(index)
                 .path("_id")
                 .asText(null);
+    }
+
+    // ====
+
+    /**
+     * 转换字段, 数字和字符串需要严格区分, 根据简道云字段类型判断
+     */
+    private void convertConditionFieldValue(@Nonnull JdyListDataRequest jdyListDataRequest) {
+        final Collection<JdyCondition> conditions = jdyListDataRequest.getFilter().getCondition();
+
+        // 只要 value 有值, 就获取字段列表进行转换字段值
+        if (CollUtil.isEmpty(conditions) || conditions.stream().map(JdyCondition::getValue).noneMatch(Objects::nonNull)) {
+            return;
+        }
+
+        // 获取字段列表
+        final JdyFieldListRequest jdyFieldListRequest = new JdyFieldListRequest();
+        jdyFieldListRequest.setAppId(jdyListDataRequest.getAppId());
+        jdyFieldListRequest.setEntryId(jdyListDataRequest.getEntryId());
+        final JdyFieldListResponse jdyFieldListResponse = this.listField(jdyFieldListRequest);
+
+        // 字段列表
+        final List<JdyField> fields = jdyFieldListResponse.getWidgets();
+        if (CollUtil.isEmpty(fields)) {
+            return;
+        }
+
+        // key: name, value: type
+        final Map<String, String> nameTypeMap = fields.stream().collect(Collectors.toMap(JdyField::getName, JdyField::getType));
+
+        for (final JdyCondition condition : conditions) {
+            final String fieldName = condition.getField();
+            final Collection<Object> values = condition.getValue();
+
+            // 设置type
+            final String type = nameTypeMap.get(fieldName);
+            condition.setType(type);
+
+            if (CollUtil.isEmpty(values)) {
+                continue;
+            }
+
+            // 执行转换, 数字字段转数字, 其他字段一律转字符串
+            final Collection<Object> newValue = new ArrayList<>();
+            for (final Object value : values) {
+                if (JdyFieldTypeEnum.NUMBER.getValue().equals(type)) {
+                    newValue.add(ConvertUtil.toNumber(value));
+                } else {
+                    newValue.add(ConvertUtil.toStr(value));
+                }
+            }
+            condition.setValue(newValue);
+        }
     }
 }

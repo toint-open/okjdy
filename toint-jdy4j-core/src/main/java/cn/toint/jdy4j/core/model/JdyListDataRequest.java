@@ -22,6 +22,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.dromara.hutool.core.array.ArrayUtil;
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
  * @date 2025/3/15
  */
 @Data
-public class JdyListRequest {
+public class JdyListDataRequest {
     /**
      * 应用ID
      */
@@ -69,7 +70,8 @@ public class JdyListRequest {
      */
     @JsonProperty("filter")
     @Valid
-    private JdyFilter filter;
+    @NotNull
+    private JdyFilter filter = new JdyFilter();
 
     /**
      * 查询的数据条数
@@ -77,19 +79,19 @@ public class JdyListRequest {
     @JsonProperty("limit")
     private int limit = 100;
 
-    public JdyListRequest() {
+    public JdyListDataRequest() {
     }
 
     @Nonnull
-    public static JdyListRequest of() {
-        return new JdyListRequest();
+    public static JdyListDataRequest of() {
+        return new JdyListDataRequest();
     }
 
     /**
      * 设置查询字段
      */
     @Nonnull
-    public JdyListRequest select(@Nonnull final String... fields) {
+    public JdyListDataRequest select(@Nonnull final String... fields) {
         if (this.fields == null) {
             this.fields = new HashSet<>();
         }
@@ -107,7 +109,7 @@ public class JdyListRequest {
      * 设置表信息
      */
     @Nonnull
-    public JdyListRequest from(@Nonnull final JdyDo jdyTable) {
+    public JdyListDataRequest from(@Nonnull final JdyDo jdyTable) {
         this.from(jdyTable.getAppId(), jdyTable.getEntryId());
         return this;
     }
@@ -116,7 +118,7 @@ public class JdyListRequest {
      * 设置表信息
      */
     @Nonnull
-    public JdyListRequest from(@Nonnull final Class<? extends JdyDo> clazz) {
+    public JdyListDataRequest from(@Nonnull final Class<? extends JdyDo> clazz) {
         final JdyDo jdyTable = ConstructorUtil.newInstance(clazz);
         this.from(jdyTable);
         return this;
@@ -126,7 +128,7 @@ public class JdyListRequest {
      * 设置表信息
      */
     @Nonnull
-    public JdyListRequest from(@Nonnull final String appId, @Nonnull final String entryId) {
+    public JdyListDataRequest from(@Nonnull final String appId, @Nonnull final String entryId) {
         Assert.notBlank(appId, "appId must not be blank");
         Assert.notBlank(entryId, "entryId must not be blank");
         this.appId = appId;
@@ -138,7 +140,7 @@ public class JdyListRequest {
      * 不为空
      */
     @Nonnull
-    public JdyListRequest notEmpty(@Nonnull final String fieldName) {
+    public JdyListDataRequest notEmpty(@Nonnull final String fieldName) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         final JdyCondition condition = new JdyCondition();
         condition.setField(fieldName);
@@ -151,7 +153,7 @@ public class JdyListRequest {
      * 不为空
      */
     @Nonnull
-    public <T, R> JdyListRequest notEmpty(@Nonnull final SerFunction<T, R> func) {
+    public <T, R> JdyListDataRequest notEmpty(@Nonnull final SerFunction<T, R> func) {
         return this.notEmpty(JacksonUtil.getAlias(func));
     }
 
@@ -159,7 +161,7 @@ public class JdyListRequest {
      * 为空
      */
     @Nonnull
-    public JdyListRequest empty(@Nonnull final String fieldName) {
+    public JdyListDataRequest empty(@Nonnull final String fieldName) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         final JdyCondition condition = new JdyCondition();
         condition.setField(fieldName);
@@ -172,7 +174,7 @@ public class JdyListRequest {
      * 为空
      */
     @Nonnull
-    public <T, R> JdyListRequest empty(@Nonnull final SerFunction<T, R> func) {
+    public <T, R> JdyListDataRequest empty(@Nonnull final SerFunction<T, R> func) {
         return this.empty(JacksonUtil.getAlias(func));
     }
 
@@ -180,7 +182,7 @@ public class JdyListRequest {
      * 等于, value 为空忽略本条件
      */
     @Nonnull
-    private JdyListRequest eq(@Nonnull final String fieldName, @Nullable final Object value) {
+    public JdyListDataRequest eq(@Nonnull final String fieldName, @Nullable final Object value) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
 
         if (value != null) {
@@ -198,7 +200,7 @@ public class JdyListRequest {
      * 等于, value 为空忽略本条件
      */
     @Nonnull
-    public <T, R> JdyListRequest eq(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
+    public <T, R> JdyListDataRequest eq(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
         return this.eq(JacksonUtil.getAlias(func), value);
     }
 
@@ -206,7 +208,7 @@ public class JdyListRequest {
      * 等于任意一个, value 为空忽略本条件
      */
     @Nonnull
-    public JdyListRequest in(@Nonnull final String fieldName, @Nullable final Collection<Object> values) {
+    public JdyListDataRequest in(@Nonnull final String fieldName, @Nullable final Collection<Object> values) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         if (CollUtil.isNotEmpty(values)) {
             final Set<Object> set = values.stream().filter(Objects::nonNull).collect(Collectors.toSet());
@@ -223,7 +225,7 @@ public class JdyListRequest {
      * 等于任意一个, value 为空忽略本条件
      */
     @Nonnull
-    public <T, R> JdyListRequest in(@Nonnull final SerFunction<T, R> func, @Nullable final Collection<Object> value) {
+    public <T, R> JdyListDataRequest in(@Nonnull final SerFunction<T, R> func, @Nullable final Collection<Object> value) {
         return this.in(JacksonUtil.getAlias(func), value);
     }
 
@@ -231,7 +233,7 @@ public class JdyListRequest {
      * 范围,包含x和y本身, xy 都为 null 忽略本条件
      */
     @Nonnull
-    public JdyListRequest range(@Nonnull final String fieldName, @Nullable final Object x, @Nullable final Object y) {
+    public JdyListDataRequest range(@Nonnull final String fieldName, @Nullable final Object x, @Nullable final Object y) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         if (x != null || y != null) {
             final JdyCondition condition = new JdyCondition();
@@ -247,7 +249,7 @@ public class JdyListRequest {
      * 范围,包含x和y本身, xy 都为 null 忽略本条件
      */
     @Nonnull
-    public <T, R> JdyListRequest range(@Nonnull final SerFunction<T, R> func, @Nullable final Object x, @Nullable final Object y) {
+    public <T, R> JdyListDataRequest range(@Nonnull final SerFunction<T, R> func, @Nullable final Object x, @Nullable final Object y) {
         return this.range(JacksonUtil.getAlias(func), x, y);
     }
 
@@ -255,7 +257,7 @@ public class JdyListRequest {
      * 大于等于 >=, value 为 null 忽略本条件
      */
     @Nonnull
-    public JdyListRequest ge(@Nonnull final String fieldName, @Nullable final Object value) {
+    public JdyListDataRequest ge(@Nonnull final String fieldName, @Nullable final Object value) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         if (value != null) {
             this.range(fieldName, value, null);
@@ -267,7 +269,7 @@ public class JdyListRequest {
      * 大于等于 >=, value 为 null 忽略本条件
      */
     @Nonnull
-    public <T, R> JdyListRequest ge(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
+    public <T, R> JdyListDataRequest ge(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
         if (value != null) {
             this.range(func, value, null);
         }
@@ -278,7 +280,7 @@ public class JdyListRequest {
      * 小于等于 <=, value 为 null 忽略本条件
      */
     @Nonnull
-    public JdyListRequest le(@Nonnull final String fieldName, @Nullable final Object value) {
+    public JdyListDataRequest le(@Nonnull final String fieldName, @Nullable final Object value) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         if (value != null) {
             this.range(fieldName, null, value);
@@ -290,7 +292,7 @@ public class JdyListRequest {
      * 小于等于 <=, value 为 null 忽略本条件
      */
     @Nonnull
-    public <T, R> JdyListRequest le(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
+    public <T, R> JdyListDataRequest le(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
         if (value != null) {
             return this.range(func, null, value);
         }
@@ -301,7 +303,7 @@ public class JdyListRequest {
      * 不等于任意一个, value 为 null 忽略本条件
      */
     @Nonnull
-    public JdyListRequest notIn(@Nonnull final String fieldName, @Nullable final Collection<Object> value) {
+    public JdyListDataRequest notIn(@Nonnull final String fieldName, @Nullable final Collection<Object> value) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         if (CollUtil.isNotEmpty(value)) {
             final Set<Object> set = value.stream().filter(Objects::nonNull).collect(Collectors.toSet());
@@ -319,7 +321,7 @@ public class JdyListRequest {
      * 不等于任意一个, value 为 null 忽略本条件
      */
     @Nonnull
-    public <T, R> JdyListRequest notIn(@Nonnull final SerFunction<T, R> func, @Nullable final Collection<Object> value) {
+    public <T, R> JdyListDataRequest notIn(@Nonnull final SerFunction<T, R> func, @Nullable final Collection<Object> value) {
         return this.notIn(JacksonUtil.getAlias(func), value);
     }
 
@@ -327,7 +329,7 @@ public class JdyListRequest {
      * 不等于 !=, value 为 null 忽略本条件
      */
     @Nonnull
-    public JdyListRequest ne(@Nonnull final String fieldName, @Nullable final Object value) {
+    public JdyListDataRequest ne(@Nonnull final String fieldName, @Nullable final Object value) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         if (value != null) {
             final JdyCondition condition = new JdyCondition();
@@ -343,7 +345,7 @@ public class JdyListRequest {
      * 不等于 !=, value 为 null 忽略本条件
      */
     @Nonnull
-    public <T, R> JdyListRequest ne(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
+    public <T, R> JdyListDataRequest ne(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
         return this.ne(JacksonUtil.getAlias(func), value);
     }
 
@@ -351,7 +353,7 @@ public class JdyListRequest {
      * 包含 like, value 为 null 忽略本条件
      */
     @Nonnull
-    public JdyListRequest like(@Nonnull final String fieldName, @Nullable final Object value) {
+    public JdyListDataRequest like(@Nonnull final String fieldName, @Nullable final Object value) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         if (value != null) {
             final JdyCondition condition = new JdyCondition();
@@ -367,7 +369,7 @@ public class JdyListRequest {
      * 包含 like
      */
     @Nonnull
-    public <T, R> JdyListRequest like(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
+    public <T, R> JdyListDataRequest like(@Nonnull final SerFunction<T, R> func, @Nullable final Object value) {
         return this.like(JacksonUtil.getAlias(func), value);
     }
 
@@ -375,7 +377,7 @@ public class JdyListRequest {
      * 表示填写了手机号且已验证的值
      */
     @Nonnull
-    public JdyListRequest verified(@Nonnull final String fieldName) {
+    public JdyListDataRequest verified(@Nonnull final String fieldName) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         final JdyCondition condition = new JdyCondition();
         condition.setField(fieldName);
@@ -388,7 +390,7 @@ public class JdyListRequest {
      * 表示填写了手机号且已验证的值
      */
     @Nonnull
-    public <T, R> JdyListRequest verified(@Nonnull final SerFunction<T, R> func) {
+    public <T, R> JdyListDataRequest verified(@Nonnull final SerFunction<T, R> func) {
         return this.verified(JacksonUtil.getAlias(func));
     }
 
@@ -396,7 +398,7 @@ public class JdyListRequest {
      * 表示填写了手机号但未验证值
      */
     @Nonnull
-    public JdyListRequest unverified(@Nonnull final String fieldName) {
+    public JdyListDataRequest unverified(@Nonnull final String fieldName) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         final JdyCondition condition = new JdyCondition();
         condition.setField(fieldName);
@@ -409,7 +411,7 @@ public class JdyListRequest {
      * 表示填写了手机号但未验证值
      */
     @Nonnull
-    public <T, R> JdyListRequest unverified(@Nonnull final SerFunction<T, R> func) {
+    public <T, R> JdyListDataRequest unverified(@Nonnull final SerFunction<T, R> func) {
         return this.unverified(JacksonUtil.getAlias(func));
     }
 
@@ -418,8 +420,7 @@ public class JdyListRequest {
      * 注意:简道云不支持and和or同时使用,所以当前方法只会覆盖原有条件,如果多次调用,只会使用最后一次覆盖的值
      */
     @Nonnull
-    public JdyListRequest and() {
-        this.initFilter();
+    public JdyListDataRequest and() {
         this.filter.setRelationship(JdyRelationshipEnum.AND.getValue());
         return this;
     }
@@ -429,8 +430,7 @@ public class JdyListRequest {
      * 注意:简道云不支持and和or同时使用,所以当前方法只会覆盖原有条件,如果多次调用,只会使用最后一次覆盖的值
      */
     @Nonnull
-    public JdyListRequest or() {
-        this.initFilter();
+    public JdyListDataRequest or() {
         this.filter.setRelationship(JdyRelationshipEnum.OR.getValue());
         return this;
     }
@@ -439,27 +439,12 @@ public class JdyListRequest {
      * 查询数量
      */
     @Nonnull
-    public JdyListRequest limit(final int limit) {
+    public JdyListDataRequest limit(final int limit) {
         this.limit = limit;
         return this;
     }
 
     private void addCondition(final JdyCondition jdyCondition) {
-        this.initFilter();
         this.filter.getCondition().add(jdyCondition);
     }
-
-    /**
-     * 初始化 filter, 确保 filter 和 condition 不为空
-     */
-    private void initFilter() {
-        if (this.filter == null) {
-            this.filter = new JdyFilter();
-        }
-
-        if (this.filter.getCondition() == null) {
-            this.filter.setCondition(new HashSet<>());
-        }
-    }
-
 }

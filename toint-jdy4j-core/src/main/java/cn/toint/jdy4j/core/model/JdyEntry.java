@@ -16,30 +16,22 @@
 package cn.toint.jdy4j.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.util.Collection;
-import java.util.HashSet;
-
-/**
- * 数据筛选器
- */
 @Data
-public class JdyFilter {
+public class JdyEntry {
     /**
-     * 筛选组合关系；“and”(满足所有过滤条件), “or”(满足任一过滤条件)
+     * 表单名称
      */
-    @JsonProperty("rel")
-    @NotBlank
-    private String relationship = JdyRelationshipEnum.AND.getValue();
+    private String name;
     /**
-     * 筛选组合关系；“and”(满足所有过滤条件), “or”(满足任一过滤条件)
+     * 应用id
      */
-    @JsonProperty("cond")
-    @Valid
-    @NotNull
-    private Collection<JdyCondition> condition = new HashSet<>();
+    @JsonProperty("app_id")
+    private String appId;
+    /**
+     * 表单id
+     */
+    @JsonProperty("entry_id")
+    private String entryId;
 }

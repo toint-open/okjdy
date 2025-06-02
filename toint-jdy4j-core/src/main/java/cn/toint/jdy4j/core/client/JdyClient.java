@@ -35,13 +35,19 @@ public interface JdyClient {
      * 获取用户应用
      */
     @Nonnull
-    List<JdyAppResponse> listApp(@Nonnull JdyAppRequest jdyAppRequest);
+    List<JdyApp> listApp(@Nonnull JdyAppListRequest jdyAppListRequest);
 
     /**
      * 获取用户表单
      */
     @Nonnull
-    List<JdyEntryResponse> listEntry(@Nonnull JdyEntryRequest jdyEntryRequest);
+    List<JdyEntry> listEntry(@Nonnull JdyEntryListRequest jdyEntryListRequest);
+
+    /**
+     * 获取表单字段
+     */
+    @Nonnull
+    JdyFieldListResponse listField(@Nonnull JdyFieldListRequest jdyFieldListRequest);
 
     /**
      * 查询数据列表
@@ -53,11 +59,11 @@ public interface JdyClient {
      * 第三次, 用第 200 条数据的 data_id 进行查询, 若设置 limit 为100, 则第三次返回 201～230 这 30 条数据.
      * 由于第三次返回结果只有 30 条, 未达到设置的 limit 上限100, 则说明查询结束.
      *
-     * @param jdyListRequest jdyListRequest
+     * @param jdyListDataRequest jdyListRequest
      * @return 数据列表
      */
     @Nonnull
-    JsonNode listData(@Nonnull JdyListRequest jdyListRequest);
+    JsonNode listData(@Nonnull JdyListDataRequest jdyListDataRequest);
 
     /**
      * 查询数据列表
@@ -69,12 +75,12 @@ public interface JdyClient {
      * 第三次, 用第 200 条数据的 data_id 进行查询, 若设置 limit 为100, 则第三次返回 201～230 这 30 条数据.
      * 由于第三次返回结果只有 30 条, 未达到设置的 limit 上限100, 则说明查询结束.
      *
-     * @param jdyListRequest jdyListRequest
-     * @param responseType   返回值类型
+     * @param jdyListDataRequest jdyListRequest
+     * @param responseType       返回值类型
      * @return 数据列表
      */
     @Nonnull
-    <T extends JdyDo> List<T> listData(@Nonnull JdyListRequest jdyListRequest, @Nonnull Class<T> responseType);
+    <T extends JdyDo> List<T> listData(@Nonnull JdyListDataRequest jdyListDataRequest, @Nonnull Class<T> responseType);
 
     /**
      * 查询数据列表
@@ -86,12 +92,12 @@ public interface JdyClient {
      * 第三次, 用第 200 条数据的 data_id 进行查询, 若设置 limit 为100, 则第三次返回 201～230 这 30 条数据.
      * 由于第三次返回结果只有 30 条, 未达到设置的 limit 上限100, 则说明查询结束.
      *
-     * @param jdyListRequest jdyListRequest
-     * @param predicate      结果返回策略 (predicate 入参为本次查询结果, 非空), true: 返回结果, false: 忽略结果
+     * @param jdyListDataRequest jdyListRequest
+     * @param predicate          结果返回策略 (predicate 入参为本次查询结果, 非空), true: 返回结果, false: 忽略结果
      * @return 数据列表
      */
     @Nonnull
-    JsonNode listData(@Nonnull JdyListRequest jdyListRequest, @Nullable Predicate<JsonNode> predicate);
+    JsonNode listData(@Nonnull JdyListDataRequest jdyListDataRequest, @Nullable Predicate<JsonNode> predicate);
 
     /**
      * 查询数据列表
@@ -103,13 +109,13 @@ public interface JdyClient {
      * 第三次, 用第 200 条数据的 data_id 进行查询, 若设置 limit 为100, 则第三次返回 201～230 这 30 条数据.
      * 由于第三次返回结果只有 30 条, 未达到设置的 limit 上限100, 则说明查询结束.
      *
-     * @param jdyListRequest jdyListRequest
-     * @param responseType   返回值类型
-     * @param predicate      结果返回策略 (predicate 入参为本次查询结果, 非空), true: 返回结果, false: 忽略结果
+     * @param jdyListDataRequest jdyListRequest
+     * @param responseType       返回值类型
+     * @param predicate          结果返回策略 (predicate 入参为本次查询结果, 非空), true: 返回结果, false: 忽略结果
      * @return 数据列表
      */
     @Nonnull
-    <T extends JdyDo> List<T> listData(@Nonnull JdyListRequest jdyListRequest, @Nonnull Class<T> responseType, @Nullable Predicate<JsonNode> predicate);
+    <T extends JdyDo> List<T> listData(@Nonnull JdyListDataRequest jdyListDataRequest, @Nonnull Class<T> responseType, @Nullable Predicate<JsonNode> predicate);
 
     /**
      * 请求

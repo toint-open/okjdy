@@ -16,38 +16,23 @@
 package cn.toint.jdy4j.core.model;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
 
-/**
- * 示例:{ "name": "_widget_1529400746031", "widgetName": "_widget_1529400746031", "label": "单行文本", "type": "text" }
- */
 @Data
-@NoArgsConstructor
-public class JdyWidgetResponse {
+public class JdyFieldListResponse {
     /**
      * 字段信息
      */
-    private List<JdyWidget> widgets;
+    private List<JdyField> widgets;
+
     /**
      * 系统字段列表（扩展字段、流程字段受功能开关影响，微信增强一旦开启会始终返回）
      */
     private List<JdySysWidget> sysWidgets;
+
     /**
      * 表单内数据最新修改时间（可用于判断表单内的数据是否发生变更）
      */
     private String dataModifyTime;
-
-    /**
-     * 字段映射键值对
-     * k:字段名
-     * v:字段对象
-     *
-     * @return 不可变映射
-     */
-    public Map<String, JdyWidget> getWidgetMap() {
-        return JdyWidget.getWidgetMap(this.widgets);
-    }
 }

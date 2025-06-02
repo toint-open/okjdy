@@ -69,7 +69,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!--toint-tool-->
-        <toint-tool.version>1.0.18</toint-tool.version>
+        <toint-tool.version>1.0.20</toint-tool.version>
         <!--ttl-->
         <ttl.version>2.14.5</ttl.version>
 

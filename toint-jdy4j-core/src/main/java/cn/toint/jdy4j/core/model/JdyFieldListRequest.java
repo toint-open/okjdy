@@ -16,27 +16,26 @@
 package cn.toint.jdy4j.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
- * entry
+ * @author Toint
+ * @date 2025/3/15
  */
 @Data
-@NoArgsConstructor
-public class JdyEntryResponse {
-    /**
-     * 表单名称
-     */
-    private String name;
+public class JdyFieldListRequest {
     /**
      * 应用id
      */
+    @NotBlank
     @JsonProperty("app_id")
     private String appId;
+
     /**
      * 表单id
      */
+    @NotBlank
     @JsonProperty("entry_id")
     private String entryId;
 }
