@@ -15,96 +15,105 @@
  */
 package cn.toint.jdy4j.core.client;
 
-import cn.toint.jdy4j.core.client.impl.BaseJdyClientImpl;
-import cn.toint.jdy4j.core.model.JdyConfigStorage;
-import cn.toint.jdy4j.core.service.JdyAppService;
-import cn.toint.jdy4j.core.service.JdyConfigStorageService;
-import cn.toint.jdy4j.core.service.JdyDataService;
-import cn.toint.jdy4j.core.service.JdyFileService;
-import cn.toint.jdy4j.core.util.JdyConfigStorageHolder;
-import cn.toint.jdy4j.core.util.JdyWidgetHolder;
-import cn.toint.tool.util.Assert;
+import cn.toint.jdy4j.core.model.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+import org.dromara.hutool.http.client.Request;
 
-import java.util.function.Function;
+import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * 简道云客户端
  *
- * <p>1. 建议开发者 extends {@link BaseJdyClientImpl}</p>
- *
  * @author Toint
  * @date 2024/10/19
  */
-public interface JdyClient extends AutoCloseable {
+public interface JdyClient {
     /**
-     * 执行方法, 默认自动关闭资源
+     * 获取用户应用
+     */
+    @Nonnull
+    List<JdyAppResponse> listApp(@Nonnull JdyAppRequest jdyAppRequest);
+
+    /**
+     * 获取用户表单
+     */
+    @Nonnull
+    List<JdyEntryResponse> listEntry(@Nonnull JdyEntryRequest jdyEntryRequest);
+
+    /**
+     * 查询数据列表
+     * 该接口的返回数据, 始终按照数据 ID 正序排列.
+     * 若要设置循环调取数据, 可以利用 data_id 字段来设置参数避免调取重复数据.
+     * 如需要查询 230 条数据:
+     * 第一次查询时可以不传 data_id 字段, 若设置 limit 为 100 , 则第一次返回了前 100 条数据；
+     * 第二次, 用第 100 条数据的 data_id 进行查询, 若设置 limit 为100, 则第二次返回 101～200 这 100 条数据；
+     * 第三次, 用第 200 条数据的 data_id 进行查询, 若设置 limit 为100, 则第三次返回 201～230 这 30 条数据.
+     * 由于第三次返回结果只有 30 条, 未达到设置的 limit 上限100, 则说明查询结束.
      *
-     * @param function 执行方法
-     * @return result
+     * @param jdyListRequest jdyListRequest
+     * @return 数据列表
      */
-    default <R> R execute(final Function<JdyClient, R> function) {
-        return this.execute(function, true);
-    }
+    @Nonnull
+    JsonNode listData(@Nonnull JdyListRequest jdyListRequest);
 
     /**
-     * 执行方法
+     * 查询数据列表
+     * 该接口的返回数据, 始终按照数据 ID 正序排列.
+     * 若要设置循环调取数据, 可以利用 data_id 字段来设置参数避免调取重复数据.
+     * 如需要查询 230 条数据:
+     * 第一次查询时可以不传 data_id 字段, 若设置 limit 为 100 , 则第一次返回了前 100 条数据；
+     * 第二次, 用第 100 条数据的 data_id 进行查询, 若设置 limit 为100, 则第二次返回 101～200 这 100 条数据；
+     * 第三次, 用第 200 条数据的 data_id 进行查询, 若设置 limit 为100, 则第三次返回 201～230 这 30 条数据.
+     * 由于第三次返回结果只有 30 条, 未达到设置的 limit 上限100, 则说明查询结束.
      *
-     * @param function  执行方法
-     * @param autoClose 是否自动关闭资源
-     * @return result
+     * @param jdyListRequest jdyListRequest
+     * @param responseType   返回值类型
+     * @return 数据列表
      */
-    default <R> R execute(final Function<JdyClient, R> function, final boolean autoClose) {
-        final JdyConfigStorage jdyConfigStorage = this.getJdyConfigStorage();
-        Assert.notNull(jdyConfigStorage, "jdyConfigStorage must not be null");
-        final String corpName = jdyConfigStorage.getCorpName();
-        Assert.notBlank(corpName, "corpName must not be blank");
-
-        // 初始化配置
-        final JdyConfigStorageService jdyConfigStorageService = this.getJdyConfigStorageService();
-        if (!jdyConfigStorageService.containsJdyConfigStorage(corpName)) {
-            jdyConfigStorageService.putJdyConfigStorage(jdyConfigStorage);
-        }
-
-        // 切换配置
-        JdyConfigStorageHolder.set(corpName);
-
-        try {
-            return function.apply(this);
-        } finally {
-            if (autoClose) {
-                close();
-            }
-        }
-    }
+    @Nonnull
+    <T extends JdyDo> List<T> listData(@Nonnull JdyListRequest jdyListRequest, @Nonnull Class<T> responseType);
 
     /**
-     * 获取配置, 开发者需实现该接口
+     * 查询数据列表
+     * 该接口的返回数据, 始终按照数据 ID 正序排列.
+     * 若要设置循环调取数据, 可以利用 data_id 字段来设置参数避免调取重复数据.
+     * 如需要查询 230 条数据:
+     * 第一次查询时可以不传 data_id 字段, 若设置 limit 为 100 , 则第一次返回了前 100 条数据；
+     * 第二次, 用第 100 条数据的 data_id 进行查询, 若设置 limit 为100, 则第二次返回 101～200 这 100 条数据；
+     * 第三次, 用第 200 条数据的 data_id 进行查询, 若设置 limit 为100, 则第三次返回 201～230 这 30 条数据.
+     * 由于第三次返回结果只有 30 条, 未达到设置的 limit 上限100, 则说明查询结束.
+     *
+     * @param jdyListRequest jdyListRequest
+     * @param predicate      结果返回策略 (predicate 入参为本次查询结果, 非空), true: 返回结果, false: 忽略结果
+     * @return 数据列表
      */
-    JdyConfigStorage getJdyConfigStorage();
-
-    @Override
-    default void close() {
-        JdyConfigStorageHolder.remove();
-        JdyWidgetHolder.remove();
-    }
-
-    /**
-     * 简道云应用
-     */
-    JdyAppService getJdyAppService();
-
-    /**
-     * 简道云数据
-     */
-    JdyDataService getJdyDataService();
+    @Nonnull
+    JsonNode listData(@Nonnull JdyListRequest jdyListRequest, @Nullable Predicate<JsonNode> predicate);
 
     /**
-     * 简道云文件
+     * 查询数据列表
+     * 该接口的返回数据, 始终按照数据 ID 正序排列.
+     * 若要设置循环调取数据, 可以利用 data_id 字段来设置参数避免调取重复数据.
+     * 如需要查询 230 条数据:
+     * 第一次查询时可以不传 data_id 字段, 若设置 limit 为 100 , 则第一次返回了前 100 条数据；
+     * 第二次, 用第 100 条数据的 data_id 进行查询, 若设置 limit 为100, 则第二次返回 101～200 这 100 条数据；
+     * 第三次, 用第 200 条数据的 data_id 进行查询, 若设置 limit 为100, 则第三次返回 201～230 这 30 条数据.
+     * 由于第三次返回结果只有 30 条, 未达到设置的 limit 上限100, 则说明查询结束.
+     *
+     * @param jdyListRequest jdyListRequest
+     * @param responseType   返回值类型
+     * @param predicate      结果返回策略 (predicate 入参为本次查询结果, 非空), true: 返回结果, false: 忽略结果
+     * @return 数据列表
      */
-    JdyFileService getJdyFileService();
+    @Nonnull
+    <T extends JdyDo> List<T> listData(@Nonnull JdyListRequest jdyListRequest, @Nonnull Class<T> responseType, @Nullable Predicate<JsonNode> predicate);
 
     /**
-     * 获取简道云配置服务
+     * 请求
      */
-    JdyConfigStorageService getJdyConfigStorageService();
+    @Nonnull
+    String request(@Nonnull Request request);
 }

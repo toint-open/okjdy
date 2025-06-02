@@ -71,12 +71,12 @@ public class JdyDeleteBatchRequest {
     }
 
     public static JdyDeleteBatchRequest of(final Iterable<?> datas) {
-        List<BaseJdyTable> jdyTables = JacksonUtil.convertValue(datas, new TypeReference<>() {
+        List<JdyDo> jdyTables = JacksonUtil.convertValue(datas, new TypeReference<>() {
         });
         return JdyDeleteBatchRequest.of(
                 jdyTables.getFirst().getAppId(),
                 jdyTables.getFirst().getEntryId(),
-                CollUtil.map(jdyTables, BaseJdyTable::getDataId)
+                CollUtil.map(jdyTables, JdyDo::getDataId)
         );
     }
 }

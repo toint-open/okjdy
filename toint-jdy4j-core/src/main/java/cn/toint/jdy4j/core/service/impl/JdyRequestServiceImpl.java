@@ -106,7 +106,7 @@ public class JdyRequestServiceImpl implements JdyRequestService {
             requestInfo.setDurationTime(TimeUtil.between(requestInfo.getRequestTime(), requestInfo.getResponseTime(), ChronoUnit.MILLIS));
 
             // 超出频率异常
-            if (JdyHttpUtil.isLimitException(response.getStatus(), bodyStr)) {
+            if (JdyHttpUtil.isLimitException(bodyStr)) {
                 final String errMsg = StrUtil.format("简道云接口超出频率限制, status: {}, body: {}", response.getStatus(), bodyStr);
                 throw new JdyRequestLimitException(errMsg);
             }

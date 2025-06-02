@@ -83,7 +83,7 @@ public class JdyInsertBatchRequest {
 
     public static JdyInsertBatchRequest of(final Iterable<?> datas) {
         final JsonNode jsonNode = JacksonUtil.valueToTree(datas);
-        final BaseJdyTable jdyTable = JacksonUtil.treeToValue(jsonNode.get(0), BaseJdyTable.class);
+        final JdyDo jdyTable = JacksonUtil.treeToValue(jsonNode.get(0), JdyDo.class);
         return JdyInsertBatchRequest.of(jdyTable.getAppId(), jdyTable.getEntryId(), jsonNode);
     }
 

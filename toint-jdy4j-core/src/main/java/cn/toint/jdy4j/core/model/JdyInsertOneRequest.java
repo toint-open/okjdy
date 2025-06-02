@@ -88,7 +88,7 @@ public class JdyInsertOneRequest {
     }
 
     public static JdyInsertOneRequest of(final Object data) {
-        final BaseJdyTable jdyTable = JacksonUtil.convertValue(data, BaseJdyTable.class);
+        final JdyDo jdyTable = JacksonUtil.convertValue(data, JdyDo.class);
         return JdyInsertOneRequest.of(jdyTable.getAppId(), jdyTable.getEntryId(), JacksonUtil.valueToTree(data));
     }
 

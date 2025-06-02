@@ -86,7 +86,7 @@ public class JdyUpdateBatchRequest {
     }
 
     public static JdyUpdateBatchRequest of(final Object data, final Collection<String> dataIds) {
-        final BaseJdyTable jdyTable = JacksonUtil.convertValue(data, BaseJdyTable.class);
+        final JdyDo jdyTable = JacksonUtil.convertValue(data, JdyDo.class);
         return JdyUpdateBatchRequest.of(jdyTable.getAppId(), jdyTable.getEntryId(), JacksonUtil.valueToTree(data), dataIds);
     }
 
@@ -95,9 +95,9 @@ public class JdyUpdateBatchRequest {
      */
     public static JdyUpdateBatchRequest of(final Iterable<?> datas) {
         final JsonNode jsonNode = JacksonUtil.valueToTree(datas);
-        final List<BaseJdyTable> jdyTables = JacksonUtil.treeToValue(jsonNode, new TypeReference<>() {
+        final List<JdyDo> jdyTables = JacksonUtil.treeToValue(jsonNode, new TypeReference<>() {
         });
-        return JdyUpdateBatchRequest.of(jsonNode.get(0), CollUtil.map(jdyTables, BaseJdyTable::getDataId));
+        return JdyUpdateBatchRequest.of(jsonNode.get(0), CollUtil.map(jdyTables, JdyDo::getDataId));
     }
 
     public JdyUpdateBatchRequest transactionId(final String transactionId) {

@@ -69,7 +69,7 @@ public class JdyDeleteOneRequest {
     }
 
     public static JdyDeleteOneRequest of(final Object data) {
-        final BaseJdyTable jdyTable = JacksonUtil.convertValue(data, BaseJdyTable.class);
+        final JdyDo jdyTable = JacksonUtil.convertValue(data, JdyDo.class);
         return JdyDeleteOneRequest.of(jdyTable.getAppId(), jdyTable.getEntryId(), jdyTable.getDataId());
     }
 }

@@ -20,6 +20,7 @@ import cn.toint.jdy4j.core.exception.JdyRequestLimitException;
 import cn.toint.tool.model.RetryPolicy;
 import cn.toint.tool.util.HttpClientUtil;
 import cn.toint.tool.util.JacksonUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.dromara.hutool.core.collection.CollUtil;
 import org.dromara.hutool.http.client.ClientConfig;
 import org.dromara.hutool.http.client.Request;
@@ -59,16 +60,12 @@ public class JdyHttpUtil {
     /**
      * 是否为请求超过频率异常
      *
-     * @param status       响应状态码
      * @param responseBody responseBody
      * @return 是否为请求超过频率异常
      */
-    public static boolean isLimitException(final int status, final String responseBody) {
-        if (status >= 200 && status < 300) {
-            return false;
-        }
-
+    public static boolean isLimitException(final String responseBody) {
         return Optional.ofNullable(responseBody)
+                .filter(StringUtils::isNotBlank)
                 .map(JacksonUtil::tryReadTree)
                 .map(jsonNode -> jsonNode.path("code"))
                 .map(code -> code.asInt(-1))

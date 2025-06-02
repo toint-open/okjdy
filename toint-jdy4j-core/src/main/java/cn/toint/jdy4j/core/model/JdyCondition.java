@@ -17,27 +17,20 @@ package cn.toint.jdy4j.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.util.Collection;
 
 /**
  * 过滤条件
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class JdyCondition {
     /**
      * 字段名
      */
-    @NotBlank
     @JsonProperty("field")
+    @NotBlank
     private String field;
 
     /**
@@ -59,8 +52,8 @@ public class JdyCondition {
      * “verified“(表示填写了手机号且已验证的值)
      * “unverified“(表示填写了手机号但未验证值)
      */
-    @NotBlank
     @JsonProperty("method")
+    @NotBlank
     private String method;
 
     /**
@@ -69,35 +62,23 @@ public class JdyCondition {
     @JsonProperty("value")
     private Collection<Object> value;
 
-    public void setValue(final Collection<Object> value) {
-        this.value = value;
-        // 简道云字段为数字类型字段时, 要求传入的数字, 若传入字符串则条件不生效
-        this.convertValue();
-    }
-
-    public void setType(final String type) {
-        this.type = type;
-        // 简道云字段为数字类型字段时, 要求传入的数字, 若传入字符串则条件不生效
-        this.convertValue();
-    }
-
-    /**
-     * 简道云字段为数字类型字段时, 要求传入的数字, 若传入字符串则条件不生效
-     */
-    private void convertValue() {
-        if (this.type == null || this.value == null) {
-            // ignore
-            return;
-        }
-
-        if ("number".equals(this.type)) {
-            this.value = this.value.stream()
-                    .map(item -> (Object) new BigDecimal(item.toString()))
-                    .toList();
-        } else {
-            this.value = this.value.stream()
-                    .map(item -> (Object) item.toString())
-                    .toList();
-        }
-    }
+//    /**
+//     * 简道云字段为数字类型字段时, 要求传入的数字, 若传入字符串则条件不生效
+//     */
+//    private void convertValue() {
+//        if (this.type == null || this.value == null) {
+//            // ignore
+//            return;
+//        }
+//
+//        if ("number".equals(this.type)) {
+//            this.value = this.value.stream()
+//                    .map(item -> (Object) new BigDecimal(item.toString()))
+//                    .toList();
+//        } else {
+//            this.value = this.value.stream()
+//                    .map(item -> (Object) item.toString())
+//                    .toList();
+//        }
+//    }
 }

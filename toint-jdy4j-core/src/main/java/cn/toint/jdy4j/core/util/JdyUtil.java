@@ -17,7 +17,7 @@
 package cn.toint.jdy4j.core.util;
 
 import cn.toint.tool.util.JacksonUtil;
-import cn.toint.jdy4j.core.model.BaseJdyTable;
+import cn.toint.jdy4j.core.model.JdyDo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -42,10 +42,10 @@ public class JdyUtil {
     public static String getLastDataId(final ArrayNode values) {
         return Optional.ofNullable(values)
                 .filter(CollUtil::isNotEmpty)
-                .map(jsonNodes -> JacksonUtil.treeToValue(values, new TypeReference<List<BaseJdyTable>>() {
+                .map(jsonNodes -> JacksonUtil.treeToValue(values, new TypeReference<List<JdyDo>>() {
                 }))
                 .map(List::getLast)
-                .map(BaseJdyTable::getDataId)
+                .map(JdyDo::getDataId)
                 .orElseThrow();
     }
 

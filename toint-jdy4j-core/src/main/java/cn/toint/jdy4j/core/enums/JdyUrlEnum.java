@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cn.toint.jdy4j.core.model;
+package cn.toint.jdy4j.core.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,11 +25,7 @@ import org.dromara.hutool.http.meta.Method;
 @Getter
 @AllArgsConstructor
 public enum JdyUrlEnum {
-    // 全局
-    GLOBAL("全局", "https://api.jiandaoyun.com/api/v5/GLOBAL", Method.POST, 50, 5),
-
     // 文件
-    UPLOAD_FILE("文件上传接口", "https://upload.qiniup.com", Method.POST, 20, 5),
     GET_UPLOAD_TOKEN("获取文件上传凭证和上传地址接口", "https://api.jiandaoyun.com/api/v5/app/entry/file/get_upload_token", Method.POST, 20, 5),
 
     // 数据

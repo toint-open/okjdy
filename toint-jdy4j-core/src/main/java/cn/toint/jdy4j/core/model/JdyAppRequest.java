@@ -15,33 +15,16 @@
  */
 package cn.toint.jdy4j.core.model;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-/**
- * app
- */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class JdyAppRequest {
     /**
-     * 单次取数的数据条数，1~100，默认 100。
+     * 数据条数
      */
-    @NotNull
-    @Min(1)
-    @Max(100)
-    private Integer limit = 100;
+    private int limit = 100;
     /**
      * 需要跳过的数据条数，默认 0 。
      */
-    @NotNull
-    @Min(0)
-    private Integer skip = 0;
+    private int skip = 0;
 }

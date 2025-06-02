@@ -56,5 +56,5 @@ public interface JdyAppService {
     /**
      * 表单字段查询接口
      */
-    JdyWidgetResponse listWidget(BaseJdyTable jdyTable);
+    JdyWidgetResponse listWidget(JdyDo jdyTable);
 }

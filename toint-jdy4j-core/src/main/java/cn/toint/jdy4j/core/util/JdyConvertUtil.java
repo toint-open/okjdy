@@ -17,7 +17,7 @@
 package cn.toint.jdy4j.core.util;
 
 import cn.toint.tool.util.JacksonUtil;
-import cn.toint.jdy4j.core.enums.JdyWidgetTypeEnum;
+import cn.toint.jdy4j.core.enums.JdyFieldTypeEnum;
 import cn.toint.jdy4j.core.model.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -61,41 +61,41 @@ public class JdyConvertUtil {
     private static Map<String, Converter> initConverterMap() {
         final Map<String, Converter> converterMap = new HashMap<>();
         // 单行文本转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.TEXT.getValue(), new TextConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.TEXT.getValue(), new TextConverter());
         // 多行文本转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.TEXT_AREA.getValue(), new TextareaConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.TEXT_AREA.getValue(), new TextareaConverter());
         // 数字转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.NUMBER.getValue(), new NumberConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.NUMBER.getValue(), new NumberConverter());
         // 单选按钮组转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.RADIO_GROUP.getValue(), new RadioGroupConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.RADIO_GROUP.getValue(), new RadioGroupConverter());
         // 日期时间转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.DATE_TIME.getValue(), new DateTimeConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.DATE_TIME.getValue(), new DateTimeConverter());
         // 复选框组转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.CHECK_BOX_GROUP.getValue(), new CheckBoxGroupConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.CHECK_BOX_GROUP.getValue(), new CheckBoxGroupConverter());
         // 下拉框转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.COMBO.getValue(), new ComboConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.COMBO.getValue(), new ComboConverter());
         // 下拉复选框转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.COMBO_CHECK.getValue(), new ComboCheckConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.COMBO_CHECK.getValue(), new ComboCheckConverter());
         // 地址转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.ADDRESS.getValue(), new AddressConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.ADDRESS.getValue(), new AddressConverter());
         // 定位转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.LOCATION.getValue(), new LocaltionConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.LOCATION.getValue(), new LocaltionConverter());
         // 图片转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.IMAGE.getValue(), new ImageConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.IMAGE.getValue(), new ImageConverter());
         // 附件转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.UPLOAD.getValue(), new UploadConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.UPLOAD.getValue(), new UploadConverter());
         // 子表单转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.SUBFORM.getValue(), new SubFormConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.SUBFORM.getValue(), new SubFormConverter());
         // 成员单选转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.USER.getValue(), new UserConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.USER.getValue(), new UserConverter());
         // 成员多选转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.USERG_ROUP.getValue(), new UserGroupConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.USERG_ROUP.getValue(), new UserGroupConverter());
         // 部门单选转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.DEPT.getValue(), new DeptConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.DEPT.getValue(), new DeptConverter());
         // 部门多选转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.DEPT_GROUP.getValue(), new DeptGroupConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.DEPT_GROUP.getValue(), new DeptGroupConverter());
         // 手机转换器
-        converterMap.putIfAbsent(JdyWidgetTypeEnum.PHONE.getValue(), new PhoneConverter());
+        converterMap.putIfAbsent(JdyFieldTypeEnum.PHONE.getValue(), new PhoneConverter());
         return converterMap;
     }
 

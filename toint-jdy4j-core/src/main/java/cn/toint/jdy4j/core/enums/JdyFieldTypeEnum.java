@@ -19,14 +19,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 简道云组件类型
+ * 简道云字段类型
  *
  * @author Toint
  * @date 2024/10/20
  */
 @Getter
 @AllArgsConstructor
-public enum JdyWidgetTypeEnum {
+public enum JdyFieldTypeEnum {
     TEXT("text"),
     TEXT_AREA("textarea"),
     SN("sn"),

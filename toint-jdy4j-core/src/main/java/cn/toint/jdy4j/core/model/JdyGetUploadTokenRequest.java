@@ -59,7 +59,7 @@ public class JdyGetUploadTokenRequest {
     }
 
     public static JdyGetUploadTokenRequest of(final Object data, final String transactionId) {
-        final BaseJdyTable jdyTable = JacksonUtil.convertValue(data, BaseJdyTable.class);
+        final JdyDo jdyTable = JacksonUtil.convertValue(data, JdyDo.class);
         return new JdyGetUploadTokenRequest(jdyTable.getAppId(), jdyTable.getEntryId(), transactionId);
     }
 }

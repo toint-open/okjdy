@@ -18,7 +18,7 @@ package cn.toint.jdy4j.core.service.impl;
 
 import cn.toint.jdy4j.core.model.JdyGetUploadTokenRequest;
 import cn.toint.jdy4j.core.model.JdyGetUploadTokenResponse;
-import cn.toint.jdy4j.core.model.JdyUrlEnum;
+import cn.toint.jdy4j.core.enums.JdyUrlEnum;
 import cn.toint.jdy4j.core.service.JdyFileService;
 import cn.toint.jdy4j.core.service.JdyRequestService;
 import cn.toint.tool.util.Assert;
@@ -82,9 +82,9 @@ public class JdyFileServiceImpl implements JdyFileService {
         bodyMap.put("token", token);
         bodyMap.put("file", file); // file 需要作为最后一个参数。
 
-        final Request request = Request.of(JdyUrlEnum.UPLOAD_FILE.getUrl())
+        final Request request = Request.of("JdyUrlEnum.UPLOAD_FILE.getUrl()")
                 .body(MultipartBody.of(bodyMap, StandardCharsets.UTF_8))
-                .method(JdyUrlEnum.UPLOAD_FILE.getMethod());
+                ;
 
         // 3.执行请求
         final JsonNode response = this.jdyRequestService.request(request);

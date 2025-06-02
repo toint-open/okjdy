@@ -16,18 +16,12 @@
 package cn.toint.jdy4j.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * app
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class JdyAppResponse {
     /**
      * 应用名称

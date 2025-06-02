@@ -16,9 +16,9 @@
 package cn.toint.jdy4j.core.model;
 
 import cn.toint.jdy4j.core.annotation.JdyTable;
+import cn.toint.tool.util.Assert;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
 import org.dromara.hutool.core.annotation.AnnotationUtil;
 
 import java.io.Serializable;
@@ -30,7 +30,7 @@ import java.io.Serializable;
  * @date 2024/10/20
  */
 @Data
-public class BaseJdyTable implements Serializable {
+public class JdyDo implements Serializable {
     /**
      * 应用Id
      */
@@ -95,25 +95,23 @@ public class BaseJdyTable implements Serializable {
     @JsonProperty("flowState")
     private Integer flowState;
 
-    public BaseJdyTable() {
+    public JdyDo() {
         this.init();
     }
 
-    public BaseJdyTable(final String appId, final String entryId) {
-        if (StringUtils.isAnyEmpty(appId, entryId)) {
-            this.init();
-            return;
-        }
-
+    public JdyDo(final String appId, final String entryId) {
+        Assert.notBlank(appId, "appId must not be blank");
+        Assert.notBlank(entryId, "entryId must not be blank");
         this.appId = appId;
         this.entryId = entryId;
     }
 
     private void init() {
         final JdyTable jdyTable = AnnotationUtil.getAnnotation(this.getClass(), JdyTable.class);
-        if (jdyTable != null) {
-            this.appId = jdyTable.appId();
-            this.entryId = jdyTable.entryId();
-        }
+        Assert.notNull(jdyTable, "jdyTable must not be null");
+        this.appId = jdyTable.appId();
+        this.entryId = jdyTable.entryId();
+        Assert.notBlank(this.appId, "appId must not be blank");
+        Assert.notBlank(this.entryId, "entryId must not be blank");
     }
 }

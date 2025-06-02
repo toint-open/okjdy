@@ -18,12 +18,7 @@ package cn.toint.jdy4j.core.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.Collection;
 
@@ -31,9 +26,6 @@ import java.util.Collection;
  * 数据筛选器
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class JdyFilter {
     /**
      * 筛选组合关系；“and”(满足所有过滤条件), “or”(满足任一过滤条件)
@@ -45,8 +37,6 @@ public class JdyFilter {
      * 筛选组合关系；“and”(满足所有过滤条件), “or”(满足任一过滤条件)
      */
     @JsonProperty("cond")
-    @NotNull
-    @NotEmpty
     @Valid
     private Collection<JdyCondition> condition;
 }

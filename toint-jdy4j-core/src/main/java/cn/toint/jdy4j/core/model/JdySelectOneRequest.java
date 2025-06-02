@@ -61,7 +61,7 @@ public class JdySelectOneRequest {
      * 获取一条数据
      */
     public static JdySelectOneRequest of(final Object data) {
-        final BaseJdyTable jdyTable = JacksonUtil.convertValue(data, BaseJdyTable.class);
+        final JdyDo jdyTable = JacksonUtil.convertValue(data, JdyDo.class);
         return new JdySelectOneRequest(jdyTable.getAppId(), jdyTable.getEntryId(), jdyTable.getDataId());
     }
 }

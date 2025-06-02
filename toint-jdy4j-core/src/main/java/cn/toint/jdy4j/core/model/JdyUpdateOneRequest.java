@@ -85,7 +85,7 @@ public class JdyUpdateOneRequest {
     }
 
     public static JdyUpdateOneRequest of(final Object data) {
-        final BaseJdyTable jdyTable = JacksonUtil.convertValue(data, BaseJdyTable.class);
+        final JdyDo jdyTable = JacksonUtil.convertValue(data, JdyDo.class);
         return JdyUpdateOneRequest.of(jdyTable.getAppId(), jdyTable.getEntryId(), jdyTable.getDataId(), JacksonUtil.valueToTree(data));
     }
 

@@ -20,6 +20,8 @@ import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.dromara.hutool.core.array.ArrayUtil;
@@ -38,45 +40,42 @@ import java.util.stream.Collectors;
 public class JdyListRequest {
     /**
      * 应用ID
-     * 是否必填:是
      */
     @JsonProperty("app_id")
+    @NotBlank
     private String appId;
 
     /**
      * 表单ID
-     * 是否必填:是
      */
     @JsonProperty("entry_id")
+    @NotBlank
     private String entryId;
 
     /**
      * 数据ID
-     * 是否必填:否
      */
     @JsonProperty("data_id")
     private String dataId;
 
     /**
      * 需要查询的数据字段
-     * 是否必填:否
      */
     @JsonProperty("fields")
     private Collection<String> fields;
 
     /**
      * 数据筛选器
-     * 是否必填:否
      */
     @JsonProperty("filter")
+    @Valid
     private JdyFilter filter;
 
     /**
      * 查询的数据条数
-     * 是否必填:否
      */
     @JsonProperty("limit")
-    private Integer limit;
+    private int limit = 100;
 
     public JdyListRequest() {
     }
@@ -108,7 +107,7 @@ public class JdyListRequest {
      * 设置表信息
      */
     @Nonnull
-    public JdyListRequest from(@Nonnull final BaseJdyTable jdyTable) {
+    public JdyListRequest from(@Nonnull final JdyDo jdyTable) {
         this.from(jdyTable.getAppId(), jdyTable.getEntryId());
         return this;
     }
@@ -117,8 +116,8 @@ public class JdyListRequest {
      * 设置表信息
      */
     @Nonnull
-    public JdyListRequest from(@Nonnull final Class<? extends BaseJdyTable> clazz) {
-        final BaseJdyTable jdyTable = ConstructorUtil.newInstance(clazz);
+    public JdyListRequest from(@Nonnull final Class<? extends JdyDo> clazz) {
+        final JdyDo jdyTable = ConstructorUtil.newInstance(clazz);
         this.from(jdyTable);
         return this;
     }
