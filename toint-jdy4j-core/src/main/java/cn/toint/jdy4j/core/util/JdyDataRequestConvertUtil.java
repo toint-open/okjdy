@@ -31,6 +31,7 @@ import org.dromara.hutool.core.lang.Assert;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 
 /**
  * 简道云请求数据转换工具
+ * 用于将Java对象转换为简道云API所需的请求格式
  *
  * @author Toint
  * @date 2024/10/20
@@ -47,13 +49,19 @@ import java.util.stream.Collectors;
 public class JdyDataRequestConvertUtil {
     /**
      * 转换器列表
-     * k:字段类型
-     * v:转换器实例
+     * k: 字段类型
+     * v: 转换器实例
      */
     private static final Map<String, Converter> CONVERTER_MAP = JdyDataRequestConvertUtil.init();
 
+    /**
+     * 简道云API要求的值字段名
+     */
     private static final String VALUE = "value";
 
+    /**
+     * 初始化所有支持的字段类型转换器
+     */
     private static Map<String, Converter> init() {
         final Map<String, Converter> converterMap = new HashMap<>();
         // 单行文本转换器
@@ -97,16 +105,17 @@ public class JdyDataRequestConvertUtil {
 
     /**
      * 转换请求简道云的 data 字段
+     * 将Java对象转换为简道云API所需的请求格式
      *
-     * @param data      data
-     * @param jdyFields 简道云字段, 如果不存在任何字段, 则返回无任何属性的 JsonNode = {}
-     * @return 转换后的 data
+     * @param data      原始数据对象
+     * @param jdyFields 简道云表单字段定义列表
+     * @return 转换后的符合简道云API格式的JsonNode
      */
     @Nonnull
     public static JsonNode convert(final @Nonnull JsonNode data, @Nonnull final List<JdyField> jdyFields) {
         Assert.notNull(data, "data must not be null");
 
-        // 如果表单不存在任何字段, 则返回无任何属性的 JsonNode = {}
+        // 如果表单不存在任何字段, 则返回空对象
         if (CollUtil.isEmpty(jdyFields)) {
             return JacksonUtil.ofObjectNode();
         }
@@ -115,67 +124,90 @@ public class JdyDataRequestConvertUtil {
         final Map<String, JdyField> fieldNameTypeMap = new HashMap<>();
         jdyFields.forEach(jdyField -> fieldNameTypeMap.put(jdyField.getName(), jdyField));
 
-        // 新数据对象, 用于返回
+        // 创建新的数据对象
         final ObjectNode newData = JacksonUtil.ofObjectNode();
         fieldNameTypeMap.forEach((fieldName, field) -> {
-            // 旧的值, 可能为 null, 此处不会忽略 null, 会严格按照传入的数据一比一传输给简道云
-            // 也就是说, 如果是 null, 简道云会对应的清空该字段的值, 格式: {"字段名": {"value": null}}
+            // 获取原始值
             final JsonNode oldValue = data.get(fieldName);
             if (JacksonUtil.isNull(oldValue)) {
+                // 对于null值，简道云API会清空该字段
                 newData.set(fieldName, JdyDataRequestConvertUtil.ofNewValue(null));
                 return;
             }
 
-            // 转换器, 如果为空则忽略当前键值对, 避免框架未适配的字段影响正常是用
+            // 获取对应的转换器, null 则忽略当前键值对, 避免框架未适配的字段影响正常是用
             final Converter converter = JdyDataRequestConvertUtil.getConverter(field);
             if (converter == null) return;
 
             // 执行转换, 得到新的 value, 加入到 newValue
             // newValue = {value: xxx}, 如果是 newValue = null, 简道云会保持该字段的当前值, 简道云不会对该字段做任何处理
-            final JsonNode newValue = converter.executeConvert(oldValue, field);
-            newData.set(fieldName, newValue);
+            try {
+                final JsonNode newValue = converter.executeConvert(oldValue, field);
+                if (newValue == null) return;
+                newData.set(fieldName, newValue);
+            } catch (Exception e) {
+                log.error("字段[{}]转换失败: {}", fieldName, e.getMessage());
+                throw new RuntimeException("字段[" + fieldName + "]转换失败: " + e.getMessage(), e);
+            }
         });
 
         return newData;
     }
 
     /**
-     * 简道云新 value
+     * 创建简道云API格式的值对象
+     * 格式: {"value": xxx}
      *
-     * @return {"value": null}
+     * @param value 原始值
+     * @return 包装后的值对象
      */
     private static JsonNode ofNewValue(@Nullable final Object value) {
         return JacksonUtil.ofObjectNode().set(VALUE, JacksonUtil.valueToTree(value));
     }
 
     /**
-     * 根据字段类型获取类型转换器
+     * 根据字段定义获取对应的转换器
      *
-     * @param jdyField 字段
-     * @return 类型转换器
+     * @param jdyField 字段定义
+     * @return 对应的转换器，如果不支持该字段类型则返回null
      */
     private static Converter getConverter(final JdyField jdyField) {
         return CONVERTER_MAP.get(jdyField.getType());
     }
 
     /**
-     * 将字段键值对转换为简道云要求的请求格式
-     * 格式要求示例: {"_widget_1432728651402": { "value": "简道云" }}
+     * 字段值转换器接口
+     * 负责将Java对象转换为简道云API所需的格式
      */
     private interface Converter {
         /**
-         * 将 value 转换为简道云要求的请求格式
+         * 将值转换为简道云API所需的格式
          *
-         * @param value    简道云字段值
-         * @param jdyField 简道云字段类型
-         * @return 格式要求示例: {"value": "xxx"}, 返回 null, 简道云会保持该字段的当前值, 简道云不会对该字段做任何处理
+         * @param value    原始值
+         * @param jdyField 字段定义
+         * @return 转换后的值，格式为{"value": xxx}
+         *         如果返回null，简道云API会保持该字段的当前值不变
          */
         @Nullable
         JsonNode executeConvert(@Nonnull JsonNode value, @Nonnull JdyField jdyField);
     }
+    
+    /**
+     * 只读字段转换器
+     * 用于处理那些API不支持修改的字段类型
+     */
+    private static class ReadOnlyConverter implements Converter {
+        @Nullable
+        @Override
+        public JsonNode executeConvert(@Nonnull JsonNode value, @Nonnull JdyField jdyField) {
+            // 返回null表示不修改该字段
+            return null;
+        }
+    }
 
     /**
      * 文件转换器
+     * 用于处理图片和附件等文件类型字段
      */
     private static class FileConverter implements Converter {
         @Nullable
@@ -188,19 +220,19 @@ public class JdyDataRequestConvertUtil {
                     .map(JdyFile.Detail::getKey)
                     .collect(Collectors.toSet());
 
-            // 如果没有 key, 则说明当前字段应该保持原样, 返回 null, 否则会清空该字段
-            // 若需要清空附件字段, 请给 key 字段设置为空字符串或 null, 简道云会清空该字段
+            // 如果没有key，则保持字段当前值不变
+            // 若需要清空附件字段，请给key字段设置为空字符串或null
             if (keys.isEmpty()) {
                 return null;
             } else {
-                return JacksonUtil.ofObjectNode().set(VALUE, JacksonUtil.valueToTree(keys));
+                return JdyDataRequestConvertUtil.ofNewValue(keys);
             }
-
         }
     }
 
     /**
      * 字符串转换器
+     * 用于处理各种文本类型字段
      */
     private static class StringConverter implements Converter {
         @Nullable
@@ -213,43 +245,42 @@ public class JdyDataRequestConvertUtil {
     /**
      * 单行文本转换器
      */
-    private static class TextConverter extends StringConverter implements Converter {
-
+    private static class TextConverter extends StringConverter {
     }
 
     /**
      * 多行文本转换器
      */
-    private static class TextareaConverter extends StringConverter implements Converter {
-
+    private static class TextareaConverter extends StringConverter {
     }
 
     /**
      * 单选按钮组转换器
      */
-    private static class RadioGroupConverter extends StringConverter implements Converter {
-
+    private static class RadioGroupConverter extends StringConverter {
     }
 
     /**
      * 下拉框转换器
      */
-    private static class ComboConverter extends StringConverter implements Converter {
-
+    private static class ComboConverter extends StringConverter {
     }
 
     /**
      * 数字转换器
      */
     private static class NumberConverter implements Converter {
-
         @Nullable
         @Override
         public JsonNode executeConvert(@Nonnull JsonNode value, @Nonnull JdyField jdyField) {
             if (StringUtils.isBlank(value.asText())) {
                 return JdyDataRequestConvertUtil.ofNewValue(null);
             } else {
-                return JdyDataRequestConvertUtil.ofNewValue(new BigDecimal(value.asText()));
+                try {
+                    return JdyDataRequestConvertUtil.ofNewValue(new BigDecimal(value.asText()));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("无效的数字格式: " + value.asText(), e);
+                }
             }
         }
     }
@@ -261,30 +292,37 @@ public class JdyDataRequestConvertUtil {
         @Nullable
         @Override
         public JsonNode executeConvert(@Nonnull JsonNode value, @Nonnull JdyField jdyField) {
-            // 请使用 String 或 Instant 映射简道云的日期字段, 其他类型暂未适配, 不保证可用
-            if (value.isTextual()) {
-                // 将字符串解析为 Instant, 无法解析则抛异常
-                final Instant instant = Instant.parse(value.asText());
-                return JdyDataRequestConvertUtil.ofNewValue(instant.toString());
-            }
-
-            if (value.isNumber()) {
-                final long time = value.asLong();
-                final int length = String.valueOf(time).length();
-                // 秒
-                if (length == 10) {
-                    return JdyDataRequestConvertUtil.ofNewValue(Instant.ofEpochSecond(time).toString());
-                } else if (length == 13) {
-                    return JdyDataRequestConvertUtil.ofNewValue(Instant.ofEpochMilli(time).toString());
+            try {
+                // 处理字符串格式的日期时间
+                if (value.isTextual()) {
+                    final Instant instant = Instant.parse(value.asText());
+                    return JdyDataRequestConvertUtil.ofNewValue(instant.toString());
                 }
-            }
 
-            throw new IllegalArgumentException("value must time type");
+                // 处理数字格式的日期时间（时间戳）
+                if (value.isNumber()) {
+                    final long time = value.asLong();
+                    final int length = String.valueOf(time).length();
+                    
+                    // 根据时间戳长度判断单位（秒/毫秒）
+                    if (length == 10) {
+                        // 秒级时间戳
+                        return JdyDataRequestConvertUtil.ofNewValue(Instant.ofEpochSecond(time).toString());
+                    } else if (length == 13) {
+                        // 毫秒级时间戳
+                        return JdyDataRequestConvertUtil.ofNewValue(Instant.ofEpochMilli(time).toString());
+                    }
+                }
+                throw new IllegalArgumentException("不支持的日期时间格式: " + value);
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException("无效的日期时间格式: " + value.asText(), e);
+            }
         }
     }
 
     /**
-     * 复选框组转换器
+     * 字符串数组转换器
+     * 用于处理多选类型字段
      */
     private static class StrArrayConverter implements Converter {
         @Nullable
@@ -292,12 +330,11 @@ public class JdyDataRequestConvertUtil {
         public JsonNode executeConvert(@Nonnull JsonNode value, @Nonnull JdyField jdyField) {
             Assert.isTrue(value.isArray(), "value must be array");
 
-            // 创建一个 JSON 数组来存储转换后的字符串值
+            // 创建字符串数组
             ArrayNode stringArray = JacksonUtil.createArrayNode();
 
-            // 遍历 JSON 集合中的每个元素
+            // 将每个元素转换为字符串
             for (JsonNode element : value) {
-                // 将每个元素转换为字符串并添加到数组中
                 stringArray.add(element.asText());
             }
 
@@ -308,15 +345,13 @@ public class JdyDataRequestConvertUtil {
     /**
      * 复选框组转换器
      */
-    private static class CheckBoxGroupConverter extends StrArrayConverter implements Converter {
-
+    private static class CheckBoxGroupConverter extends StrArrayConverter {
     }
 
     /**
      * 下拉复选框转换器
      */
-    private static class ComboCheckConverter extends StrArrayConverter implements Converter {
-
+    private static class ComboCheckConverter extends StrArrayConverter {
     }
 
     /**
@@ -346,16 +381,14 @@ public class JdyDataRequestConvertUtil {
     /**
      * 图片转换器
      */
-    private static class ImageConverter extends FileConverter implements Converter {
-
+    private static class ImageConverter extends FileConverter {
     }
 
     /**
      * 附件转换器
      */
-    private static class UploadConverter extends FileConverter implements Converter {
+    private static class UploadConverter extends FileConverter {
     }
-
 
     /**
      * 子表单转换器
@@ -366,28 +399,26 @@ public class JdyDataRequestConvertUtil {
         public JsonNode executeConvert(@Nonnull JsonNode value, @Nonnull JdyField jdyField) {
             Assert.isTrue(value.isArray(), "value must be array");
 
-            // 如果表单不存在任何字段, 则返回空数组
+            // 获取子表单字段定义, key: 简道云字段名称, value: 简道云字段对象
             final List<JdyField> jdyFields = jdyField.getItems();
             if (CollUtil.isEmpty(jdyFields)) {
                 return JdyDataRequestConvertUtil.ofNewValue(JacksonUtil.createArrayNode());
             }
 
-            // key: 简道云字段名称, value: 简道云字段对象
+            // 构建子表单字段映射
             final Map<String, JdyField> fieldNameTypeMap = new HashMap<>();
             jdyFields.forEach(jdyFieldItem -> fieldNameTypeMap.put(jdyFieldItem.getName(), jdyFieldItem));
 
             // 创建子表单数据数组
             final ArrayNode arrayValue = JacksonUtil.createArrayNode();
 
-            // 遍历子表单中的每一行数据
+            // 处理每一行子表单数据
             for (final JsonNode subFormItem : value) {
-                // 创建一个新的子表单行数据对象
                 final ObjectNode newSubFormItem = JacksonUtil.ofObjectNode();
 
-                // 处理子表单数据ID (_id字段)
-                // 如果存在_id字段，则需要保留该ID，并按照简道云API要求的格式进行处理
+                // 处理子表单数据ID
+                // 注意：根据简道云API，子表单数据ID需要保留并正确处理
                 if (subFormItem.has("_id")) {
-                    // 注释: 子表单数据ID需要包装在{"value": "xxx"}格式中
                     newSubFormItem.set("_id", JdyDataRequestConvertUtil.ofNewValue(subFormItem.get("_id").asText()));
                 }
 
@@ -406,6 +437,7 @@ public class JdyDataRequestConvertUtil {
 
                     // 执行转换，得到新的value
                     final JsonNode newValue = converter.executeConvert(oldValue, field);
+                    if (newValue == null) return;
                     newSubFormItem.set(fieldName, newValue);
                 });
 
