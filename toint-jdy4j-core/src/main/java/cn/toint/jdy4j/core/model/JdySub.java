@@ -15,23 +15,10 @@
  */
 package cn.toint.jdy4j.core.model;
 
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
- * 成员多选
+ * 子表单
  */
-@NoArgsConstructor
-public
-class JdyDeptGroupList extends ArrayList<JdyDept> {
-    /**
-     * 获取文件keys
-     */
-    public Set<Integer> getDeptNos() {
-        return this.stream().map(JdyDept::getDeptNo).filter(Objects::nonNull).collect(Collectors.toSet());
-    }
+public class JdySub<T extends JdySubDo> extends ArrayList<T> {
 }

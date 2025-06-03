@@ -15,6 +15,8 @@
  */
 package cn.toint.jdy4j.core.model;
 
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
@@ -23,16 +25,22 @@ import java.util.List;
 public class JdyFieldListResponse {
     /**
      * 字段信息
+     * 如果简道云是个空表单, 则对应为空集合, 非null
      */
+    @NotNull
     private List<JdyField> widgets;
 
     /**
      * 系统字段列表（扩展字段、流程字段受功能开关影响，微信增强一旦开启会始终返回）
      */
+    @Nullable
     private List<JdySysWidget> sysWidgets;
 
     /**
      * 表单内数据最新修改时间（可用于判断表单内的数据是否发生变更）
+     * 如果当前表单是个新表单, 没有数据, 返回 null
+     * 往后只要表单存在过数据, 该字段都会返回值
      */
+    @Nullable
     private String dataModifyTime;
 }

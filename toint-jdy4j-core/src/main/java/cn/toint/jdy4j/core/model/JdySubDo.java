@@ -15,20 +15,22 @@
  */
 package cn.toint.jdy4j.core.model;
 
-import org.dromara.hutool.core.lang.Assert;
-
-import java.util.ArrayList;
-import java.util.Collection;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 
 /**
- * 子表单
+ * 简道云子表单基类
+ *
+ * @author Toint
+ * @date 2025/1/2
  */
-public class JdySubTableList<T extends BaseJdySubTable> extends ArrayList<T> {
+@Data
+public class JdySubDo {
 
-    public static <T extends BaseJdySubTable> JdySubTableList<T> of(final Collection<T> collection) {
-        Assert.notEmpty(collection);
-        final JdySubTableList<T> subTableList = new JdySubTableList<>();
-        subTableList.addAll(collection);
-        return subTableList;
-    }
+    /**
+     * 数据ID
+     */
+    @JsonProperty("_id")
+    private String dataId;
+
 }

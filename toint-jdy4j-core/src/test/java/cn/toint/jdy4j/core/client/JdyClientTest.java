@@ -13,7 +13,7 @@ import org.dromara.hutool.core.io.file.FileUtil;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -86,8 +86,8 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
         final JdyListDataRequest jdyListDataRequest = JdyListDataRequest.of()
                 .select()
                 .from(TestJdyDo.class)
-                .eq(TestJdyDo::getF1, BigDecimal.valueOf(1));
-        final List<JdyDo> response = this.jdyClient.listData(jdyListDataRequest, JdyDo.class);
+                .eq(TestJdyDo::getNum, "1");
+        final List<TestJdyDo> response = this.jdyClient.listData(jdyListDataRequest, TestJdyDo.class);
         log.info("listData response: {}", JacksonUtil.writeValueAsString(response));
     }
 
@@ -104,130 +104,23 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
     @Data
     @JdyTable(appId = "68383bfeba0b36d412d89aae", entryId = "683cefb4b20f798ec356c27b")
     private static class TestJdyDo extends JdyDo {
-        @JsonProperty("f1")
-        private String f1;
+        private String str;
+        private Number num;
+        private Instant time;
+        private JdyFile file;
+        private JdySub<Sub> sub;
+    }
 
-//        @JsonProperty("f2")
-//        private String f2;
-//
-//        @JsonProperty("f3")
-//        private Integer f3;
-//
-//        @JsonProperty("f4")
-//        private String f4;
-//
-//        @JsonProperty("f5")
-//        private String f5;
-//
-//        @JsonProperty("f6")
-//        private String f6;
-//
-//        @JsonProperty("f7")
-//        private String f7;
-//
-//        @JsonProperty("f8")
-//        private String f8;
-//
-//        @JsonProperty("f9")
-//        private String f9;
-//
-//        @JsonProperty("f10")
-//        private String f10;
-//
-//        @JsonProperty("f11")
-//        private String f11;
-//
-//        @JsonProperty("f12")
-//        private String f12;
-//
-//        @JsonProperty("f13")
-//        private String f13;
-//
-//        @JsonProperty("f14")
-//        private String f14;
-//
-//        @JsonProperty("f15")
-//        private String f15;
-//
-//        @JsonProperty("f16")
-//        private String f16;
-//
-//        @JsonProperty("f17")
-//        private Subform f17;
-//
-//        @JsonProperty("f18")
-//        private String f18;
-//
-//        @JsonProperty("f19")
-//        private String f19;
-//
-//        @JsonProperty("f20")
-//        private String f20;
-//
-//        @JsonProperty("f21")
-//        private String f21;
-//
-//        @JsonProperty("f22")
-//        private String f22;
-//
-//        // Subform class
-//        @EqualsAndHashCode(callSuper = true)
-//        @Data
-//        public static class Subform extends BaseJdySubTable {
-//
-//            @JsonProperty("ff1")
-//            private String ff1;
-//
-//            @JsonProperty("ff2")
-//            private String ff2;
-//
-//            @JsonProperty("ff3")
-//            private Integer ff3;
-//
-//            @JsonProperty("ff4")
-//            private String ff4;
-//
-//            @JsonProperty("ff5")
-//            private String ff5;
-//
-//            @JsonProperty("ff6")
-//            private String ff6;
-//
-//            @JsonProperty("ff7")
-//            private String ff7;
-//
-//            @JsonProperty("ff8")
-//            private String ff8;
-//
-//            @JsonProperty("ff9")
-//            private String ff9;
-//
-//            @JsonProperty("ff10")
-//            private String ff10;
-//
-//            @JsonProperty("ff11")
-//            private String ff11;
-//
-//            @JsonProperty("ff12")
-//            private String ff12;
-//
-//            @JsonProperty("ff13")
-//            private String ff13;
-//
-//            @JsonProperty("ff14")
-//            private String ff14;
-//
-//            @JsonProperty("ff15")
-//            private String ff15;
-//
-//            @JsonProperty("ff16")
-//            private String ff16;
-//
-//            @JsonProperty("ff17")
-//            private String ff17;
-//
-//            @JsonProperty("ff18")
-//            private String ff18;
-//        }
+    @EqualsAndHashCode(callSuper = true)
+    @Data
+    private static class Sub extends JdySubDo {
+        @JsonProperty("sub_str")
+        private String subStr;
+        @JsonProperty("sub_num")
+        private Number subNum;
+        @JsonProperty("sub_time")
+        private Instant subTime;
+        @JsonProperty("sub_file")
+        private JdyFile subFile;
     }
 }

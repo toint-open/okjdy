@@ -50,6 +50,18 @@ public interface JdyClient {
     JdyFieldListResponse listField(@Nonnull JdyFieldListRequest jdyFieldListRequest);
 
     /**
+     * 查询数据
+     */
+    @Nonnull
+    JsonNode getData(@Nonnull JdyDataGetRequest jdyDataGetRequest);
+
+    /**
+     * 查询数据
+     */
+    @Nonnull
+    <T extends JdyDo> T getData(@Nonnull JdyDataGetRequest jdyDataGetRequest, @Nonnull Class<T> responseClass);
+
+    /**
      * 查询数据列表
      * 该接口的返回数据, 始终按照数据 ID 正序排列.
      * 若要设置循环调取数据, 可以利用 data_id 字段来设置参数避免调取重复数据.
@@ -116,6 +128,18 @@ public interface JdyClient {
      */
     @Nonnull
     <T extends JdyDo> List<T> listData(@Nonnull JdyListDataRequest jdyListDataRequest, @Nonnull Class<T> responseType, @Nullable Predicate<JsonNode> predicate);
+
+    /**
+     * 新增数据
+     */
+    @Nonnull
+    JsonNode save(@Nonnull JdyDataSaveRequest jdyDataSaveRequest);
+
+    /**
+     * 新增数据
+     */
+    @Nonnull
+    <T> T save(@Nonnull JdyDataSaveRequest jdyDataSaveRequest, @Nonnull Class<T> responseClass);
 
     /**
      * 请求

@@ -16,43 +16,50 @@
 package cn.toint.jdy4j.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
 
 /**
  * @author Toint
  * @date 2025/3/15
  */
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@Data
-public class JdyFile {
+public class JdyFile extends ArrayList<JdyFile.Detail> {
     /**
-     * name
+     * @author Toint
+     * @date 2025/3/15
      */
-    @JsonProperty("name")
-    private String name;
-    /**
-     * size
-     */
-    @JsonProperty("size")
-    private Long size;
-    /**
-     * mime
-     */
-    @JsonProperty("mime")
-    private String mime;
-    /**
-     * url
-     */
-    @JsonProperty("url")
-    private String url;
-    /**
-     * 文件上传key
-     */
-    @JsonProperty("key")
-    private String key;
+    @Data
+    public static class Detail {
+        /**
+         * name
+         */
+        @JsonProperty("name")
+        private String name;
+
+        /**
+         * size
+         */
+        @JsonProperty("size")
+        private Long size;
+
+        /**
+         * mime
+         */
+        @JsonProperty("mime")
+        private String mime;
+
+        /**
+         * url
+         */
+        @JsonProperty("url")
+        private String url;
+
+        /**
+         * 文件上传key, 在数据查询时该值不会返回
+         * 如果想清空文件, 请将key设置为空字符串或 null
+         */
+        @JsonProperty("key")
+        private String key;
+    }
 }

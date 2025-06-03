@@ -15,34 +15,30 @@
  */
 package cn.toint.jdy4j.core.model;
 
+import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-/**
- * 获取一条数据
- */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class JdySelectOneRequest {
+public class JdyDataGetRequest {
     /**
      * 应用id
      */
     @JsonProperty("app_id")
     @NotBlank
     private String appId;
+
     /**
      * 表单id
      */
     @JsonProperty("entry_id")
     @NotBlank
     private String entryId;
+
     /**
      * 数据id
      */
@@ -50,18 +46,26 @@ public class JdySelectOneRequest {
     @NotBlank
     private String dataId;
 
-    /**
-     * 获取一条数据
-     */
-    public static JdySelectOneRequest of(final String appId, final String entryId, final String dataId) {
-        return new JdySelectOneRequest(appId, entryId, dataId);
+    public JdyDataGetRequest() {
     }
 
-    /**
-     * 获取一条数据
-     */
-    public static JdySelectOneRequest of(final Object data) {
-        final JdyDo jdyTable = JacksonUtil.convertValue(data, JdyDo.class);
-        return new JdySelectOneRequest(jdyTable.getAppId(), jdyTable.getEntryId(), jdyTable.getDataId());
+    public JdyDataGetRequest(@Nonnull final String appId, @Nonnull final String entryId, @Nonnull final String dataId) {
+        Assert.notBlank(appId, "appId must not be blank");
+        Assert.notBlank(entryId, "entryId must not be blank");
+        Assert.notBlank(dataId, "dataId must not be blank");
+        this.appId = appId;
+        this.entryId = entryId;
+        this.dataId = dataId;
+    }
+
+    public static <T extends JdyDo> JdyDataGetRequest of(@Nonnull final T data) {
+        Assert.notNull(data, "data must not be null");
+        return new JdyDataGetRequest(data.getAppId(), data.getEntryId(), data.getDataId());
+    }
+
+    public static JdyDataGetRequest of(@Nonnull final JsonNode data) {
+        Assert.isFalse(JacksonUtil.isNull(data), "data must not be null");
+        final JdyDo jdyDo = JacksonUtil.treeToValue(data, JdyDo.class);
+        return new JdyDataGetRequest(jdyDo.getAppId(), jdyDo.getEntryId(), jdyDo.getDataId());
     }
 }

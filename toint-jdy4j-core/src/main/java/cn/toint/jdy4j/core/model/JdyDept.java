@@ -16,20 +16,13 @@
 package cn.toint.jdy4j.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 部门
  */
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Data
-public
-class JdyDept {
+public class JdyDept {
     /**
      * name
      */

@@ -35,17 +35,17 @@ public interface JdyDataService {
     /**
      * 获取一条数据
      */
-    ObjectNode selectOne(JdySelectOneRequest selectOneRequest);
+    ObjectNode selectOne(JdyDataGetRequest selectOneRequest);
 
     /**
      * 获取一条数据
      */
-    <T> T selectOne(JdySelectOneRequest selectOneRequest, Class<T> toValueType);
+    <T> T selectOne(JdyDataGetRequest selectOneRequest, Class<T> toValueType);
 
     /**
      * 获取一条数据
      */
-    <T> T selectOne(JdySelectOneRequest selectOneRequest, final TypeReference<T> toValueTypeRef);
+    <T> T selectOne(JdyDataGetRequest selectOneRequest, final TypeReference<T> toValueTypeRef);
 
     /**
      * 查询数据列表
@@ -152,7 +152,7 @@ public interface JdyDataService {
      * @param insertOneRequest insertOneRequest
      * @return 返回提交后的完整数据，内容同查询单条数据接口
      */
-    ObjectNode insertOne(JdyInsertOneRequest insertOneRequest);
+    ObjectNode insertOne(JdyDataSaveRequest insertOneRequest);
 
     /**
      * 新增一条数据
@@ -167,7 +167,7 @@ public interface JdyDataService {
      * @param valueType        反序列化
      * @return 返回提交后的完整数据，内容同查询单条数据接口
      */
-    <T> T insertOne(JdyInsertOneRequest insertOneRequest, Class<T> valueType);
+    <T> T insertOne(JdyDataSaveRequest insertOneRequest, Class<T> valueType);
 
     /**
      * 转换请求数据格式

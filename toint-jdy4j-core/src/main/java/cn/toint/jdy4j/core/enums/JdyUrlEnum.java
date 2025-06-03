@@ -33,10 +33,10 @@ public enum JdyUrlEnum {
     DELETE_ONE_DATA("删除单条数据接口", "https://api.jiandaoyun.com/api/v5/app/entry/data/delete", Method.POST, 20, 5),
     UPDATE_BATCH_DATA("修改多条数据接口", "https://api.jiandaoyun.com/api/v5/app/entry/data/batch_update", Method.POST, 10, 5),
     UPDATE_ONE_DATA("修改单条数据接口", "https://api.jiandaoyun.com/api/v5/app/entry/data/update", Method.POST, 20, 5),
-    INSERT_BATCH_DATA("新建多条数据接口", "https://api.jiandaoyun.com/api/v5/app/entry/data/batch_create", Method.POST, 10, 5),
-    INSERT_ONE_DATA("新建单条数据接口", "https://api.jiandaoyun.com/api/v5/app/entry/data/create", Method.POST, 20, 5),
+    SAVE_BATCH_DATA("新建多条数据接口", "https://api.jiandaoyun.com/api/v5/app/entry/data/batch_create", Method.POST, 10, 5),
+    SAVE_ONE_DATA("新建单条数据接口", "https://api.jiandaoyun.com/api/v5/app/entry/data/create", Method.POST, 20, 5),
     LIST_DATA("查询多条数据接口", "https://api.jiandaoyun.com/api/v5/app/entry/data/list", Method.POST, 30, 5),
-    SELECT_DATA("查询单条数据接口", "https://api.jiandaoyun.com/api/v5/app/entry/data/get", Method.POST, 30, 5),
+    GET_DATA("查询单条数据接口", "https://api.jiandaoyun.com/api/v5/app/entry/data/get", Method.POST, 30, 5),
 
     // 应用
     LIST_WIDGET("表单字段查询接口", "https://api.jiandaoyun.com/api/v5/app/entry/widget/list", Method.POST, 30, 5),

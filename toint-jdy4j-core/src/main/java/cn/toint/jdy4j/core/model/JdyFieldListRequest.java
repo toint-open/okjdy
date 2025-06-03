@@ -15,7 +15,11 @@
  */
 package cn.toint.jdy4j.core.model;
 
+import cn.toint.tool.util.Assert;
+import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -38,4 +42,20 @@ public class JdyFieldListRequest {
     @NotBlank
     @JsonProperty("entry_id")
     private String entryId;
+
+    public JdyFieldListRequest() {
+    }
+
+    public JdyFieldListRequest(final String appId, final String entryId) {
+        Assert.notNull(appId, "appId must not be null");
+        Assert.notNull(entryId, "entryId must not be null");
+        this.appId = appId;
+        this.entryId = entryId;
+    }
+
+    public static JdyFieldListRequest of(@Nonnull final JsonNode jsonNode) {
+        Assert.notNull(jsonNode, "jsonNode must not be null");
+        final JdyDo jdyDo = JacksonUtil.treeToValue(jsonNode, JdyDo.class);
+        return new JdyFieldListRequest(jdyDo.getAppId(), jdyDo.getEntryId());
+    }
 }

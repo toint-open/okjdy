@@ -15,23 +15,10 @@
  */
 package cn.toint.jdy4j.core.model;
 
-import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 成员多选
  */
-@NoArgsConstructor
-public
-class JdyUserGroupList extends ArrayList<JdyUser> {
-    /**
-     * 获取文件keys
-     */
-    public Set<String> getUsernames() {
-        return this.stream().map(JdyUser::getUsername).filter(StringUtils::isNotBlank).collect(Collectors.toSet());
-    }
+public class JdyUserGroup extends ArrayList<JdyUser> {
 }

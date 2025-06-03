@@ -15,22 +15,10 @@
  */
 package cn.toint.jdy4j.core.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import java.util.ArrayList;
 
 /**
- * 简道云子表单基类
- *
- * @author Toint
- * @date 2025/1/2
+ * 成员多选
  */
-@Data
-public class BaseJdySubTable {
-
-    /**
-     * 数据ID
-     */
-    @JsonProperty("_id")
-    private String dataId;
-
+public class JdyDeptGroup extends ArrayList<JdyDept> {
 }

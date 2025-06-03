@@ -15,84 +15,87 @@
  */
 package cn.toint.jdy4j.core.model;
 
+import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-/**
- * 新增一条数据
- */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class JdyInsertOneRequest {
+public class JdyDataSaveRequest {
     /**
      * 应用ID
-     * 是否必填:是
      */
     @JsonProperty("app_id")
     @NotBlank
     private String appId;
+
     /**
      * 表单ID
-     * 是否必填:是
      */
     @JsonProperty("entry_id")
     @NotBlank
     private String entryId;
+
     /**
      * 数据内容
-     * 是否必填:是
      */
     @JsonProperty("data")
     @NotNull
     private JsonNode data;
+
     /**
      * 数据提交人（取成员编号 username，可从通讯录接口获取）
-     * 是否必填:否
      */
     @JsonProperty("data_creator")
     private String dataCreator;
+
     /**
      * 是否发起流程（仅流程表单有效）
-     * 是否必填:否
      */
     @JsonProperty("is_start_workflow")
     private boolean startWorkflow = true;
+
     /**
      * 是否触发智能助手
-     * 是否必填:否
      */
     @JsonProperty("is_start_trigger")
     private boolean startTrigger = true;
+
     /**
-     * 事务ID；transaction_id 用于绑定一批上传的文件，若数据中包含附件或图片控件，则 transaction_id 必须与“获取文件上传凭证和上传地址接口”中的 transaction_id 参数相同。
-     * 是否必填:否
+     * 事务ID
+     * transaction_id 用于绑定一批上传的文件，若数据中包含附件或图片控件，则 transaction_id 必须与“获取文件上传凭证和上传地址接口”中的 transaction_id 参数相同。
      */
     @JsonProperty("transaction_id")
     private String transactionId;
 
-    public static JdyInsertOneRequest of(final String appId, final String entryId, final JsonNode data) {
-        final JdyInsertOneRequest insertOneRequest = new JdyInsertOneRequest();
-        insertOneRequest.setAppId(appId);
-        insertOneRequest.setEntryId(entryId);
-        insertOneRequest.setData(data);
-        return insertOneRequest;
+    public JdyDataSaveRequest() {
     }
 
-    public static JdyInsertOneRequest of(final Object data) {
-        final JdyDo jdyTable = JacksonUtil.convertValue(data, JdyDo.class);
-        return JdyInsertOneRequest.of(jdyTable.getAppId(), jdyTable.getEntryId(), JacksonUtil.valueToTree(data));
+    public JdyDataSaveRequest(final String appId, final String entryId, final JsonNode data) {
+        Assert.notBlank(appId, "appId must not be blank");
+        Assert.notBlank(entryId, "entryId must not be blank");
+        Assert.notNull(data, "data must not be null");
+        this.appId = appId;
+        this.entryId = entryId;
+        this.data = data;
     }
 
-    public JdyInsertOneRequest transactionId(final String transactionId) {
+    public static <T extends JdyDo> JdyDataSaveRequest of(@Nonnull final T data) {
+        Assert.notNull(data, "data must not be null");
+        return JdyDataSaveRequest.of(JacksonUtil.valueToTree(data));
+    }
+
+    public static JdyDataSaveRequest of(@Nonnull JsonNode data) {
+        Assert.notNull(data, "data must not be null");
+        final JdyDo jdyDo = JacksonUtil.treeToValue(data, JdyDo.class);
+        return new JdyDataSaveRequest(jdyDo.getAppId(), jdyDo.getEntryId(), data);
+    }
+
+    public JdyDataSaveRequest transactionId(final String transactionId) {
         this.transactionId = transactionId;
         return this;
     }

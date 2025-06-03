@@ -7,6 +7,7 @@ import cn.toint.jdy4j.core.enums.JdyUrlEnum;
 import cn.toint.jdy4j.core.event.JdyRequestEvent;
 import cn.toint.jdy4j.core.exception.JdyRequestLimitException;
 import cn.toint.jdy4j.core.model.*;
+import cn.toint.jdy4j.core.util.JdyDataRequestConvertUtil;
 import cn.toint.jdy4j.core.util.JdyHttpUtil;
 import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.ExceptionUtil;
@@ -117,7 +118,6 @@ public class JdyClientImpl implements JdyClient {
 
             final String resBody = this.request(request);
             final List<JdyEntry> forms = Optional.of(resBody)
-                    .filter(StringUtils::isNotBlank)
                     .map(JacksonUtil::readTree)
                     .map(jsonNode -> jsonNode.path("forms"))
                     .filter(JsonNode::isArray)
@@ -146,9 +146,35 @@ public class JdyClientImpl implements JdyClient {
                 .body(JacksonUtil.writeValueAsString(jdyFieldListRequest));
 
         final String resBody = this.request(request);
-        return Optional.of(resBody)
+        final JdyFieldListResponse jdyFieldListResponse = Optional.of(resBody)
                 .map(str -> JacksonUtil.readValue(str, JdyFieldListResponse.class))
                 .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+        Assert.validate(jdyFieldListRequest, "简道云响应异常, body: {}, cause: {}", resBody);
+        return jdyFieldListResponse;
+    }
+
+    @Nonnull
+    @Override
+    public JsonNode getData(@Nonnull final JdyDataGetRequest jdyDataGetRequest) {
+        Assert.validate(jdyDataGetRequest, "jdyDataGetRequest valid error, cause: {}");
+
+        final Request request = Request.of(JdyUrlEnum.GET_DATA.getUrl())
+                .method(JdyUrlEnum.GET_DATA.getMethod())
+                .body(JacksonUtil.writeValueAsString(jdyDataGetRequest));
+
+        final String resBody = this.request(request);
+        return Optional.of(resBody)
+                .map(JacksonUtil::readTree)
+                .map(jsonNode -> jsonNode.path("data"))
+                .filter(JacksonUtil::isNotNull)
+                .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+    }
+
+    @Nonnull
+    @Override
+    public <T extends JdyDo> T getData(@Nonnull final JdyDataGetRequest jdyDataGetRequest, final @Nonnull Class<T> responseClass) {
+        Assert.notNull(responseClass, "responseClass must not be null");
+        return JacksonUtil.treeToValue(this.getData(jdyDataGetRequest), responseClass);
     }
 
     @Override
@@ -208,7 +234,6 @@ public class JdyClientImpl implements JdyClient {
                 log.error(e.getMessage(), e);
             }
 
-
             // 扣减数量
             limit.addAndGet(-data.size());
 
@@ -234,6 +259,34 @@ public class JdyClientImpl implements JdyClient {
             response.add(JacksonUtil.treeToValue(item, responseType));
         }
         return response;
+    }
+
+    @Nonnull
+    @Override
+    public JsonNode save(@Nonnull final JdyDataSaveRequest jdyDataSaveRequest) {
+        Assert.validate(jdyDataSaveRequest, "jdyDataSaveRequest valid error, cause: {}");
+
+        // 转换 data
+        final JdyFieldListResponse jdyFieldListResponse = this.listField(JdyFieldListRequest.of(jdyDataSaveRequest.getData()));
+        final JsonNode newData = JdyDataRequestConvertUtil.convert(jdyDataSaveRequest.getData(), jdyFieldListResponse.getWidgets());
+        jdyDataSaveRequest.setData(newData);
+
+        final Request request = Request.of(JdyUrlEnum.SAVE_ONE_DATA.getUrl())
+                .method(JdyUrlEnum.SAVE_ONE_DATA.getMethod())
+                .body(JacksonUtil.writeValueAsString(jdyDataSaveRequest));
+
+        final String resBody = this.request(request);
+        return Optional.of(resBody)
+                .map(JacksonUtil::readTree)
+                .map(jsonNode -> jsonNode.path("data"))
+                .filter(JacksonUtil::isNotNull)
+                .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+    }
+
+    @Nonnull
+    @Override
+    public <T> T save(@Nonnull final JdyDataSaveRequest jdyDataSaveRequest, final @Nonnull Class<T> responseClass) {
+        return JacksonUtil.treeToValue(this.save(jdyDataSaveRequest), responseClass);
     }
 
     @Nonnull
@@ -366,9 +419,14 @@ public class JdyClientImpl implements JdyClient {
             final Collection<Object> newValue = new ArrayList<>();
             for (final Object value : values) {
                 if (JdyFieldTypeEnum.NUMBER.getValue().equals(type)) {
-                    newValue.add(ConvertUtil.toNumber(value));
+                    final Number number = ConvertUtil.toNumber(value);
+                    Assert.notNull(number, "value convert to number error");
+                    newValue.add(number);
                 } else {
-                    newValue.add(ConvertUtil.toStr(value));
+                    // 可以是空字符串, 但是不能是 null
+                    final String str = ConvertUtil.toStr(value);
+                    Assert.notNull(str, "value convert to str error");
+                    newValue.add(str);
                 }
             }
             condition.setValue(newValue);
