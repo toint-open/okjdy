@@ -18,7 +18,7 @@ package cn.toint.jdy4j.core.model;
 import java.util.ArrayList;
 
 /**
- * 成员多选
+ * 部门多选
  */
 public class JdyDeptGroup extends ArrayList<JdyDept> {
 }

@@ -30,6 +30,7 @@ import org.dromara.hutool.core.collection.CollUtil;
 import org.dromara.hutool.core.lang.Assert;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -261,7 +262,24 @@ public class JdyDataRequestConvertUtil {
         @Override
         public JsonNode executeConvert(@Nonnull JsonNode value, @Nonnull JdyField jdyField) {
             // 请使用 String 或 Instant 映射简道云的日期字段, 其他类型暂未适配, 不保证可用
-            return JdyDataRequestConvertUtil.ofNewValue(value.asText());
+            if (value.isTextual()) {
+                // 将字符串解析为 Instant, 无法解析则抛异常
+                final Instant instant = Instant.parse(value.asText());
+                return JdyDataRequestConvertUtil.ofNewValue(instant.toString());
+            }
+
+            if (value.isNumber()) {
+                final long time = value.asLong();
+                final int length = String.valueOf(time).length();
+                // 秒
+                if (length == 10) {
+                    return JdyDataRequestConvertUtil.ofNewValue(Instant.ofEpochSecond(time).toString());
+                } else if (length == 13) {
+                    return JdyDataRequestConvertUtil.ofNewValue(Instant.ofEpochMilli(time).toString());
+                }
+            }
+
+            throw new IllegalArgumentException("value must time type");
         }
     }
 

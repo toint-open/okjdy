@@ -6,9 +6,11 @@ import cn.toint.jdy4j.core.event.JdyRequestEvent;
 import cn.toint.jdy4j.core.model.*;
 import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import org.dromara.hutool.core.data.id.IdUtil;
 import org.dromara.hutool.core.io.file.FileUtil;
 import org.junit.jupiter.api.Test;
 
@@ -89,6 +91,34 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
                 .eq(TestJdyDo::getNum, "1");
         final List<TestJdyDo> response = this.jdyClient.listData(jdyListDataRequest, TestJdyDo.class);
         log.info("listData response: {}", JacksonUtil.writeValueAsString(response));
+    }
+
+    /**
+     * 新增数据
+     */
+    @Test
+    void save() {
+        final Sub sub = new Sub();
+        sub.setSubStr(IdUtil.getSnowflakeNextIdStr());
+        sub.setSubNum(IdUtil.getSnowflakeNextId());
+        sub.setSubTime(Instant.now());
+        sub.setSubFile(null);
+
+        final JdySub<Sub> subs = new JdySub<>();
+        subs.add(sub);
+        subs.add(sub);
+        subs.add(sub);
+        subs.add(sub);
+
+        final TestJdyDo testJdyDo = new TestJdyDo();
+        testJdyDo.setStr(IdUtil.getSnowflakeNextIdStr());
+        testJdyDo.setNum(IdUtil.getSnowflakeNextId());
+        testJdyDo.setTime(Instant.now());
+        testJdyDo.setFile(null);
+        testJdyDo.setSub(subs);
+
+        final JsonNode jsonNode = this.jdyClient.save(JdyDataSaveRequest.of(testJdyDo));
+        log.info("save response: {}", JacksonUtil.writeValueAsString(jsonNode));
     }
 
     @Override
