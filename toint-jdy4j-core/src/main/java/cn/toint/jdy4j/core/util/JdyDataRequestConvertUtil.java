@@ -74,7 +74,7 @@ public class JdyDataRequestConvertUtil {
         // 地址转换器
         converterMap.put(JdyFieldTypeEnum.ADDRESS.getValue(), new AddressConverter());
         // 定位转换器
-        converterMap.put(JdyFieldTypeEnum.LOCATION.getValue(), new LocaltionConverter());
+        converterMap.put(JdyFieldTypeEnum.LOCATION.getValue(), new LocationConverter());
         // 图片转换器
         converterMap.put(JdyFieldTypeEnum.IMAGE.getValue(), new ImageConverter());
         // 附件转换器
@@ -316,7 +316,7 @@ public class JdyDataRequestConvertUtil {
     /**
      * 定位转换器
      */
-    private static class LocaltionConverter implements Converter {
+    private static class LocationConverter implements Converter {
         @Nullable
         @Override
         public JsonNode executeConvert(@Nonnull JsonNode value, @Nonnull JdyField jdyField) {
@@ -349,7 +349,6 @@ public class JdyDataRequestConvertUtil {
             Assert.isTrue(value.isArray(), "value must be array");
 
             // 如果表单不存在任何字段, 则返回空数组
-            // 注释: 根据简道云API文档，子表单数据应该是一个数组
             final List<JdyField> jdyFields = jdyField.getItems();
             if (CollUtil.isEmpty(jdyFields)) {
                 return JdyDataRequestConvertUtil.ofNewValue(JacksonUtil.createArrayNode());
@@ -368,7 +367,6 @@ public class JdyDataRequestConvertUtil {
                 final ObjectNode newSubFormItem = JacksonUtil.ofObjectNode();
 
                 // 处理子表单数据ID (_id字段)
-                // 注释: 根据简道云API文档，子表单数据中的_id字段是由服务端生成的，用于标识子表单中的每一行数据
                 // 如果存在_id字段，则需要保留该ID，并按照简道云API要求的格式进行处理
                 if (subFormItem.has("_id")) {
                     // 注释: 子表单数据ID需要包装在{"value": "xxx"}格式中
@@ -398,7 +396,6 @@ public class JdyDataRequestConvertUtil {
             }
 
             // 返回包装好的子表单数据
-            // 注释: 根据简道云API文档，子表单数据需要包装在{"value": [...]}格式中
             return JdyDataRequestConvertUtil.ofNewValue(arrayValue);
         }
     }
@@ -448,6 +445,7 @@ public class JdyDataRequestConvertUtil {
         @Nullable
         @Override
         public JsonNode executeConvert(@Nonnull JsonNode value, @Nonnull JdyField jdyField) {
+            Assert.isTrue(value.isArray(), "value must be array");
             final JdyDeptGroup depts = JacksonUtil.treeToValue(value, JdyDeptGroup.class);
             final Set<Integer> deptnos = depts.stream().map(JdyDept::getDeptNo).collect(Collectors.toSet());
             return JdyDataRequestConvertUtil.ofNewValue(deptnos);
