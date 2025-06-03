@@ -157,76 +157,6 @@ public class JdyDataRequestConvertUtil {
         return CONVERTER_MAP.get(jdyField.getType());
     }
 
-//    /**
-//     * 将字段键值对转换为简道云要求的请求格式
-//     *
-//     * @param key       简道云属性名称
-//     * @param value     简道云属性值
-//     * @param widgetDto 简道云字段
-//     * @return 转换后的键值对, 不允许返回null, 格式要求示例: {"_widget_1432728651402": { "value": "简道云" }}
-//     */
-//    public static ObjectNode convertPair(final String key, final JsonNode value, final JdyField widgetDto) {
-//        // 当key为空时,忽略不处理当前字段
-//        if (StringUtils.isBlank(key)) {
-//            return JdyDataRequestConvertUtil.ofIgnore();
-//        }
-//
-//        // 当value为空时,简道云会清除当前属性值
-//        if (value == null || value.isNull()) {
-//            return JdyDataRequestConvertUtil.ofClear(key);
-//        }
-//
-//        // 获取转换器,如果不存在,则忽略对当前字段的转换
-//        final Converter converter = JdyDataRequestConvertUtil.getConverter(widgetDto);
-//        if (converter == null) {
-//            return JdyDataRequestConvertUtil.ofClear(key);
-//        }
-//
-//        // 执行值转换
-//        try {
-//            return converter.executeConvert(value, widgetDto);
-//        } catch (Exception e) {
-//            log.error(e.getMessage(), e);
-//            return JdyDataRequestConvertUtil.ofClear(key);
-//        }
-//    }
-//
-//    /**
-//     * 创建一个忽略处理的简道云对象
-//     * 示例:{}
-//     */
-//    public static ObjectNode ofIgnore() {
-//        return JacksonUtil.ofObjectNode();
-//    }
-
-//    /**
-//     * 创建一个可以清除简道云属性值的对象
-//     * 示例:{"_widget_1729599225116": {}}
-//     */
-//    public static ObjectNode ofClear(final String key) {
-//        return JacksonUtil.ofObjectNode(key, JacksonUtil.ofObjectNode());
-//    }
-
-//    /**
-//     * 忽略空值的处理
-//     *
-//     * @param ignoreNull 忽略null值,true:null值属性不会请求至简道云,简道云会保持原值处理,false:null至属性会被请求至简道云,简道云会将该属性值清空
-//     * @param objectNode objectNode
-//     */
-//    public static void ignoreNullValue(final boolean ignoreNull, final ObjectNode objectNode) {
-//        if (!ignoreNull || CollUtil.isEmpty(objectNode)) {
-//            return;
-//        }
-//
-//        // 如果valueisEmpty对象,删除该属性,不发送请求至简道云,实现忽略该值的处理
-//        final Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
-//        fields.forEachRemaining(field -> {
-//            if (StringUtils.isBlank(field.getKey()) || IterUtil.isEmpty(field.getValue())) {
-//                fields.remove();
-//            }
-//        });
-//    }
-
     /**
      * 将字段键值对转换为简道云要求的请求格式
      * 格式要求示例: {"_widget_1432728651402": { "value": "简道云" }}
@@ -431,12 +361,12 @@ public class JdyDataRequestConvertUtil {
 
             // 创建子表单数据数组
             final ArrayNode arrayValue = JacksonUtil.createArrayNode();
-            
+
             // 遍历子表单中的每一行数据
             for (final JsonNode subFormItem : value) {
                 // 创建一个新的子表单行数据对象
                 final ObjectNode newSubFormItem = JacksonUtil.ofObjectNode();
-                
+
                 // 处理子表单数据ID (_id字段)
                 // 注释: 根据简道云API文档，子表单数据中的_id字段是由服务端生成的，用于标识子表单中的每一行数据
                 // 如果存在_id字段，则需要保留该ID，并按照简道云API要求的格式进行处理
@@ -444,7 +374,7 @@ public class JdyDataRequestConvertUtil {
                     // 注释: 子表单数据ID需要包装在{"value": "xxx"}格式中
                     newSubFormItem.set("_id", JdyDataRequestConvertUtil.ofNewValue(subFormItem.get("_id").asText()));
                 }
-                
+
                 // 处理子表单中的其他字段
                 fieldNameTypeMap.forEach((fieldName, field) -> {
                     // 获取子表单行中该字段的值
@@ -462,7 +392,7 @@ public class JdyDataRequestConvertUtil {
                     final JsonNode newValue = converter.executeConvert(oldValue, field);
                     newSubFormItem.set(fieldName, newValue);
                 });
-                
+
                 // 将处理好的子表单行添加到数组中
                 arrayValue.add(newSubFormItem);
             }
