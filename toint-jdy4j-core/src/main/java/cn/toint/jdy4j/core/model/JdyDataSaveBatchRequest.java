@@ -23,6 +23,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.dromara.hutool.core.data.id.IdUtil;
 
 import java.util.Collection;
 
@@ -65,9 +66,11 @@ public class JdyDataSaveBatchRequest {
 
     /**
      * 事务ID；transaction_id 用于绑定一批上传的文件，若数据中包含附件或图片控件，则 transaction_id 必须与“获取文件上传凭证和上传地址接口”中的 transaction_id 参数相同。
+     * 新建多条数据，部分数据新建时可能出现失败的情况。处理方法如下所示：
+     * 使用同一个 transaction_id 再次请求新建多条，传入全部数据。执行效果将为新增第一次失败的数据，第一次成功的数据不会重复新增。
      */
     @JsonProperty("transaction_id")
-    private String transactionId;
+    private String transactionId = IdUtil.fastSimpleUUID();
 
     public JdyDataSaveBatchRequest() {
     }

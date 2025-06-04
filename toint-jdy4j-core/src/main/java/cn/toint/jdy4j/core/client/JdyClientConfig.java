@@ -1,5 +1,6 @@
 package cn.toint.jdy4j.core.client;
 
+import cn.toint.jdy4j.core.constant.JdyConstant;
 import cn.toint.jdy4j.core.event.JdyRequestEvent;
 import cn.toint.jdy4j.core.exception.JdyRequestLimitException;
 import cn.toint.tool.model.RetryPolicy;
@@ -30,7 +31,7 @@ public class JdyClientConfig {
      * 简道云服务地址, 私有化部署版本可替换本地址
      */
     @NotBlank
-    private String url = "https://api.jiandaoyun.com";
+    private String url = JdyConstant.DEFAULT_SERVER_URL;
 
     /**
      * api key

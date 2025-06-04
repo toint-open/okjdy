@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -71,14 +72,21 @@ public class JdyDataDeleteBatchRequest {
     public static JdyDataDeleteBatchRequest of(final JsonNode data) {
         Assert.notNull(data, "data must not be null");
         Assert.isTrue(data.isArray(), "data must not be array");
+
         final List<JdyDo> jdyDos = JacksonUtil.treeToValue(data, new TypeReference<>() {
         });
+
         return JdyDataDeleteBatchRequest.of(jdyDos);
     }
 
     public static <T extends JdyDo> JdyDataDeleteBatchRequest of(final List<T> data) {
         Assert.notEmpty(data, "data must not be empty");
-        final Set<String> dataIds = data.stream().map(JdyDo::getDataId).collect(Collectors.toSet());
+
+        final Set<String> dataIds = data.stream()
+                .map(JdyDo::getDataId)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toSet());
+
         return new JdyDataDeleteBatchRequest(data.getFirst().getAppId(), data.getFirst().getEntryId(), dataIds);
     }
 }

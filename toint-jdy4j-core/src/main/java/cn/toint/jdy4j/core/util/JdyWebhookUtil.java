@@ -16,10 +16,10 @@
 
 package cn.toint.jdy4j.core.util;
 
-import cn.toint.tool.util.JacksonUtil;
 import cn.toint.jdy4j.core.model.JdyWebhookRequest;
+import cn.toint.tool.util.Assert;
+import cn.toint.tool.util.JacksonUtil;
 import jakarta.servlet.http.HttpServletRequest;
-import org.dromara.hutool.core.lang.Assert;
 import org.dromara.hutool.core.text.StrUtil;
 import org.dromara.hutool.crypto.SecureUtil;
 import org.dromara.hutool.http.server.servlet.ServletUtil;
@@ -33,7 +33,6 @@ import java.util.Objects;
  * @date 2024/12/31
  */
 public class JdyWebhookUtil {
-
     /**
      * 解码简道云 webhook 请求
      * 为了防止 webhook 的接收服务器被第三方恶意攻击，用户在开发回调接口时，建议对回调请求进行签名校验，以确保回调请求来源来自于简道云。hook会以POST的形式将内容以JSON格式发送给指定地址。
@@ -44,7 +43,7 @@ public class JdyWebhookUtil {
      */
     public static JdyWebhookRequest decode(final HttpServletRequest request, final String secret) {
         Assert.notNull(request, "request must not be null");
-        Assert.notNull(secret, "secret must not be null");
+        Assert.notBlank(secret, "secret must not be null");
 
         final String body = ServletUtil.getBody(request);
         final Map<String, String> param = ServletUtil.getParamMap(request);

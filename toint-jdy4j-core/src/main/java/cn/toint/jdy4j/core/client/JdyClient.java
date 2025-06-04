@@ -19,7 +19,6 @@ import cn.toint.jdy4j.core.model.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.dromara.hutool.http.client.Request;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -52,13 +51,13 @@ public interface JdyClient {
     /**
      * 查询数据
      */
-    @Nonnull
+    @Nullable
     JsonNode getData(@Nonnull JdyDataGetRequest jdyDataGetRequest);
 
     /**
      * 查询数据
      */
-    @Nonnull
+    @Nullable
     <T extends JdyDo> T getData(@Nonnull JdyDataGetRequest jdyDataGetRequest, @Nonnull Class<T> responseClass);
 
     /**
@@ -131,12 +130,20 @@ public interface JdyClient {
 
     /**
      * 新增数据
+     *
+     * @param jdyDataSaveRequest jdyDataSaveRequest
+     * @return 返回提交后的完整数据，内容同查询单条数据接口
+     * @throws RuntimeException 新增数据失败
      */
     @Nonnull
     JsonNode saveData(@Nonnull JdyDataSaveRequest jdyDataSaveRequest);
 
     /**
      * 新增数据
+     *
+     * @param jdyDataSaveRequest jdyDataSaveRequest
+     * @return 返回提交后的完整数据，内容同查询单条数据接口
+     * @throws RuntimeException 新增数据失败
      */
     @Nonnull
     <T> T saveData(@Nonnull JdyDataSaveRequest jdyDataSaveRequest, @Nonnull Class<T> responseClass);
@@ -184,6 +191,7 @@ public interface JdyClient {
      * 删除数据
      *
      * @param jdyDataDeleteRequest jdyDataDeleteRequest
+     * @return 是否删除成功
      */
     boolean deleteData(@Nonnull JdyDataDeleteRequest jdyDataDeleteRequest);
 
@@ -191,13 +199,7 @@ public interface JdyClient {
      * 删除数据
      *
      * @param jdyDataDeleteBatchRequest jdyDataDeleteBatchRequest
-     * @return
+     * @return 删除成功数量
      */
     int deleteBatchData(@Nonnull JdyDataDeleteBatchRequest jdyDataDeleteBatchRequest);
-
-    /**
-     * 请求
-     */
-    @Nonnull
-    String request(@Nonnull Request request);
 }

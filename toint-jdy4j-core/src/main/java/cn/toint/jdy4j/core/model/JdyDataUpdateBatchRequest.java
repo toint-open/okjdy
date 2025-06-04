@@ -22,11 +22,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
-import org.dromara.hutool.core.collection.CollUtil;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * @author Toint
@@ -82,20 +79,17 @@ public class JdyDataUpdateBatchRequest {
         this.data = data;
     }
 
-    public static JdyDataUpdateBatchRequest of(final String appId, final String entryId, final JsonNode data, final Collection<String> dataIds) {
-        final JdyDataUpdateBatchRequest updateBatchRequest = new JdyDataUpdateBatchRequest();
-        updateBatchRequest.setAppId(appId);
-        updateBatchRequest.setEntryId(entryId);
-        updateBatchRequest.setData(data);
-        updateBatchRequest.setDataIds(Set.copyOf(CollUtil.filter(dataIds, StringUtils::isNotBlank)));
-        return updateBatchRequest;
-    }
-
     public static JdyDataUpdateBatchRequest of(final JsonNode data, final Collection<String> dataIds) {
         Assert.notNull(data, "data can not be null");
         Assert.notEmpty(dataIds, "dataIds can not be null");
         final JdyDo jdyDo = JacksonUtil.treeToValue(data, JdyDo.class);
-        return JdyDataUpdateBatchRequest.of(jdyDo.getAppId(), jdyDo.getEntryId(), JacksonUtil.valueToTree(data), dataIds);
+        return new JdyDataUpdateBatchRequest(jdyDo.getAppId(), jdyDo.getEntryId(), dataIds, data);
+    }
+
+    public static <T extends JdyDo> JdyDataUpdateBatchRequest of(final T data, final Collection<String> dataIds) {
+        Assert.notNull(data, "data can not be null");
+        Assert.notEmpty(dataIds, "dataIds can not be null");
+        return new JdyDataUpdateBatchRequest(data.getAppId(), data.getEntryId(), dataIds, JacksonUtil.valueToTree(data));
     }
 
     public JdyDataUpdateBatchRequest transactionId(final String transactionId) {

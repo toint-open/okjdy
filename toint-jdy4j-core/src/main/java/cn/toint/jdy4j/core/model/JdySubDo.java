@@ -26,7 +26,6 @@ import lombok.Data;
  */
 @Data
 public class JdySubDo {
-
     /**
      * 数据ID
      */

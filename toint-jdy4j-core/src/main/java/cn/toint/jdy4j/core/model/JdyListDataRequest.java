@@ -77,7 +77,7 @@ public class JdyListDataRequest {
      * 查询的数据条数
      */
     @JsonProperty("limit")
-    private int limit = 100;
+    private int limit = Integer.MAX_VALUE;
 
     public JdyListDataRequest() {
     }
@@ -215,6 +215,7 @@ public class JdyListDataRequest {
             Assert.isTrue(set.size() <= 200, "条件参数最多可传递200个");
             final JdyCondition condition = new JdyCondition();
             condition.setField(fieldName);
+            condition.setMethod(JdyMethodEnum.IN.getValue());
             condition.setValue(set);
             this.addCondition(condition);
         }

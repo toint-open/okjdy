@@ -9,6 +9,7 @@ import cn.toint.jdy4j.core.exception.JdyRequestLimitException;
 import cn.toint.jdy4j.core.model.*;
 import cn.toint.jdy4j.core.util.JdyDataRequestConvertUtil;
 import cn.toint.jdy4j.core.util.JdyHttpUtil;
+import cn.toint.tool.exception.RetryException;
 import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.ExceptionUtil;
 import cn.toint.tool.util.JacksonUtil;
@@ -153,21 +154,22 @@ public class JdyClientImpl implements JdyClient {
         return jdyFieldListResponse;
     }
 
-    @Nonnull
     @Override
-    public JsonNode getData(@Nonnull final JdyDataGetRequest jdyDataGetRequest) {
+    public @Nullable JsonNode getData(@Nonnull final JdyDataGetRequest jdyDataGetRequest) {
         Assert.validate(jdyDataGetRequest, "jdyDataGetRequest valid error, cause: {}");
 
+        // 请求参数
         final Request request = Request.of(JdyUrlEnum.GET_DATA.getUrl())
                 .method(JdyUrlEnum.GET_DATA.getMethod())
                 .body(JacksonUtil.writeValueAsString(jdyDataGetRequest));
 
+        // 执行请求
         final String resBody = this.request(request);
+        JacksonUtil.readTree(resBody);
         return Optional.of(resBody)
                 .map(JacksonUtil::readTree)
-                .map(jsonNode -> jsonNode.path("data"))
-                .filter(JacksonUtil::isNotNull)
-                .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+                .map(jsonNode -> jsonNode.get("data"))
+                .orElse(null);
     }
 
     @Nonnull
@@ -200,13 +202,12 @@ public class JdyClientImpl implements JdyClient {
         final int onceSize = 100;
         final AtomicInteger limit = new AtomicInteger(jdyListDataRequest.getLimit());
         final ArrayNode response = JacksonUtil.createArrayNode();
-        String dataId = jdyListDataRequest.getDataId();
 
         while (true) {
             final JdyListDataRequest reqBody = new JdyListDataRequest();
             reqBody.setAppId(jdyListDataRequest.getAppId());
             reqBody.setEntryId(jdyListDataRequest.getEntryId());
-            reqBody.setDataId(dataId);
+            reqBody.setDataId(jdyListDataRequest.getDataId());
             reqBody.setFields(jdyListDataRequest.getFields());
             reqBody.setFilter(jdyListDataRequest.getFilter());
             reqBody.setLimit(Math.min(limit.get(), onceSize));
@@ -242,7 +243,7 @@ public class JdyClientImpl implements JdyClient {
             if (data.size() < onceSize || limit.get() <= 0 || StringUtils.isBlank(lastDataId)) {
                 break;
             } else {
-                dataId = lastDataId;
+                jdyListDataRequest.setDataId(lastDataId);
             }
 
         }
@@ -271,15 +272,17 @@ public class JdyClientImpl implements JdyClient {
         final JsonNode newData = JdyDataRequestConvertUtil.convert(jdyDataSaveRequest.getData(), jdyFieldListResponse.getWidgets());
         jdyDataSaveRequest.setData(newData);
 
+        // 请求参数
         final Request request = Request.of(JdyUrlEnum.SAVE_ONE_DATA.getUrl())
                 .method(JdyUrlEnum.SAVE_ONE_DATA.getMethod())
                 .body(JacksonUtil.writeValueAsString(jdyDataSaveRequest));
 
+        // 执行请求
         final String resBody = this.request(request);
         return Optional.of(resBody)
                 .map(JacksonUtil::readTree)
                 .map(jsonNode -> jsonNode.path("data"))
-                .filter(JacksonUtil::isNotNull)
+                .filter(jsonNode -> StringUtils.isNotBlank(jsonNode.path("_id").asText()))
                 .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
     }
 
@@ -335,7 +338,7 @@ public class JdyClientImpl implements JdyClient {
     public JsonNode updateData(@Nonnull final JdyDataUpdateRequest jdyDataUpdateRequest, final boolean ignoreNull) {
         Assert.validate(jdyDataUpdateRequest, "jdyDataUpdateRequest valid error, cause: {}");
 
-        // 忽略 null
+        // 简道云字段保持原值
         if (ignoreNull) {
             final Iterator<JsonNode> iterator = jdyDataUpdateRequest.getData().iterator();
             while (iterator.hasNext()) {
@@ -350,15 +353,17 @@ public class JdyClientImpl implements JdyClient {
         final JsonNode newData = JdyDataRequestConvertUtil.convert(jdyDataUpdateRequest.getData(), jdyFieldListResponse.getWidgets());
         jdyDataUpdateRequest.setData(newData);
 
+        // 请求参数
         final Request request = Request.of(JdyUrlEnum.UPDATE_ONE_DATA.getUrl())
                 .method(JdyUrlEnum.UPDATE_ONE_DATA.getMethod())
                 .body(JacksonUtil.writeValueAsString(jdyDataUpdateRequest));
 
+        // 执行请求
         final String resBody = this.request(request);
         return Optional.of(resBody)
                 .map(JacksonUtil::readTree)
                 .map(jsonNode -> jsonNode.path("data"))
-                .filter(JacksonUtil::isNotNull)
+                .filter(jsonNode -> StringUtils.isNotBlank(jsonNode.path("_id").asText()))
                 .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
     }
 
@@ -411,16 +416,25 @@ public class JdyClientImpl implements JdyClient {
     public boolean deleteData(@Nonnull final JdyDataDeleteRequest jdyDataDeleteRequest) {
         Assert.validate(jdyDataDeleteRequest, "jdyDataDeleteRequest valid error, cause: {}");
 
+        // 请求参数
         final Request request = Request.of(JdyUrlEnum.DELETE_ONE_DATA.getUrl())
                 .method(JdyUrlEnum.DELETE_ONE_DATA.getMethod())
                 .body(JacksonUtil.writeValueAsString(jdyDataDeleteRequest));
 
-        final String resBody = this.request(request);
-        final String response = Optional.of(resBody)
+        // 执行请求, 若数据不存在会抛异常
+        final String resBody;
+        try {
+            resBody = this.request(request);
+        } catch (Exception e) {
+            return false;
+        }
+
+        // 读取响应
+        return Optional.of(resBody)
                 .map(JacksonUtil::readTree)
                 .map(jsonNode -> jsonNode.path("status").asText())
-                .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
-        return "success".equals(response);
+                .filter(str -> Objects.equals("success", str))
+                .isPresent();
     }
 
     @Override
@@ -444,21 +458,26 @@ public class JdyClientImpl implements JdyClient {
         return successCount.get();
     }
 
+    /**
+     * 请求简道云
+     *
+     * @param request request
+     * @return 响应体
+     * @throws RetryException 请求重试后仍然异常
+     */
     @Nonnull
-    @Override
-    public String request(@Nonnull final Request request) {
+    private String request(@Nonnull final Request request) {
         Assert.notNull(request, "request must not be null");
+        Assert.validate(this.jdyClientConfig, "jdyClientConfig valid error, cause: {}");
 
         // 替换 url
-        UrlBuilder url = request.url();
-        final String pathStr = url.getPathStr();
-        final UrlQuery query = url.getQuery();
-        Assert.notNull(url, "url must not be null");
+        Assert.notNull(request.url(), "url must not be null");
+        final String pathStr = request.url().getPathStr();
+        final UrlQuery query = request.url().getQuery();
         Assert.notBlank(pathStr, "path must not be blank");
-        url = UrlBuilder.ofHttp(this.jdyClientConfig.getUrl())
+        request.url(UrlBuilder.ofHttp(this.jdyClientConfig.getUrl())
                 .addPath(pathStr)
-                .setQuery(query);
-        request.url(url);
+                .setQuery(query));
 
         // apikey
         request.header(HttpHeaders.AUTHORIZATION, "Bearer " + this.jdyClientConfig.getApiKey());
@@ -487,7 +506,7 @@ public class JdyClientImpl implements JdyClient {
             }
 
             // 其他异常
-            if (!response.isOk() || StringUtils.isBlank(bodyStr)) {
+            if (StringUtils.isBlank(bodyStr)) {
                 throw new RuntimeException(StrUtil.format("简道云响应异常, status: {}, body: {}", status, bodyStr));
             }
 

@@ -16,9 +16,12 @@
 package cn.toint.jdy4j.core.model;
 
 import cn.toint.jdy4j.core.enums.JdyWebhookOpEnum;
+import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import lombok.Data;
 
 /**
@@ -51,7 +54,10 @@ public class JdyWebhookRequest {
         return JdyWebhookOpEnum.of(this.op);
     }
 
-    public <T> T data(final Class<T> valueType) {
+    @Nullable
+    public <T> T data(@Nonnull final Class<T> valueType) {
+        Assert.notNull(valueType, "valueType must not be null");
+
         if (JacksonUtil.isNull(this.data)) {
             return null;
         }
@@ -59,11 +65,14 @@ public class JdyWebhookRequest {
         return JacksonUtil.treeToValue(this.data, valueType);
     }
 
-    public <T> T data(final TypeReference<T> toValueTypeRef) {
+    @Nullable
+    public <T> T data(@Nonnull final TypeReference<T> valueType) {
+        Assert.notNull(valueType, "valueType must not be null");
+
         if (JacksonUtil.isNull(this.data)) {
             return null;
         }
 
-        return JacksonUtil.treeToValue(this.data, toValueTypeRef);
+        return JacksonUtil.treeToValue(this.data, valueType);
     }
 }

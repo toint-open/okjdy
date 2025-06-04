@@ -16,18 +16,10 @@
 
 package cn.toint.jdy4j.core.util;
 
+import cn.toint.tool.util.ExceptionUtil;
 import cn.toint.tool.util.JacksonUtil;
-import cn.toint.jdy4j.core.model.JdyDo;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import lombok.extern.slf4j.Slf4j;
-import org.dromara.hutool.core.collection.CollUtil;
-import org.dromara.hutool.core.lang.Assert;
-import org.dromara.hutool.core.text.StrUtil;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -37,38 +29,16 @@ import java.util.Optional;
 @Slf4j
 public class JdyUtil {
     /**
-     * 获取最后一条数据ID
-     */
-    public static String getLastDataId(final ArrayNode values) {
-        return Optional.ofNullable(values)
-                .filter(CollUtil::isNotEmpty)
-                .map(jsonNodes -> JacksonUtil.treeToValue(values, new TypeReference<List<JdyDo>>() {
-                }))
-                .map(List::getLast)
-                .map(JdyDo::getDataId)
-                .orElseThrow();
-    }
-
-    /**
      * 校验智能助手响应
      *
      * @param responseStr 简道云响应信息
      */
     public static void validIntelligentAssistantResponse(final String responseStr) {
-        Assert.notBlank(responseStr, "简道云智能助手响应校验失败, responseStr must not be blank");
-        final JsonNode jsonNode;
-        try {
-            jsonNode = JacksonUtil.readTree(responseStr);
-        } catch (Exception e) {
-            final String msg = StrUtil.format("简道云智能助手响应校验失败, 响应信息: {}, cause: {}", responseStr, e.getMessage());
-            throw new RuntimeException(msg, e);
-        }
-
-        // 校验code
-        Optional.ofNullable(jsonNode.get("code"))
-                .map(JsonNode::numberValue)
-                .filter(number -> Objects.equals(number.intValue(), 0))
-                .orElseThrow(() -> new RuntimeException(StrUtil.format("简道云智能助手响应校验 code 失败, 响应信息: {}", responseStr)));
+        Optional.ofNullable(responseStr)
+                .map(JacksonUtil::readTree)
+                .map(jsonNode -> jsonNode.path("code").asInt(-1))
+                .filter(code -> code == 0)
+                .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云智能助手异常, responseStr: {}", responseStr));
     }
 
     /**

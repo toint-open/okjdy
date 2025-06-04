@@ -4,9 +4,10 @@ import cn.toint.jdy4j.core.annotation.JdyTable;
 import cn.toint.jdy4j.core.client.impl.JdyClientImpl;
 import cn.toint.jdy4j.core.event.JdyRequestEvent;
 import cn.toint.jdy4j.core.model.*;
+import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.Nonnull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -35,172 +36,113 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
      * 初始化简道云客户端
      */
     private JdyClient init() {
+        // 读取密钥
         final File file = FileUtil.file("/Users/toint/repository/data/jdy4j/api-key.txt");
         final String key = FileUtil.readUtf8String(file);
 
+        // 初始化客户端
         final JdyClientConfig jdyClientConfig = new JdyClientConfig(key);
         jdyClientConfig.setJdyRequestConsumer(this);
-
         return new JdyClientImpl(jdyClientConfig);
     }
 
     /**
-     * 获取用户应用
+     * 测试单例
      */
     @Test
-    void listApp() {
-        final JdyAppListRequest jdyAppListRequest = new JdyAppListRequest();
-        final List<JdyApp> jdyApps = this.jdyClient.listApp(jdyAppListRequest);
-        log.info("获取用户应用数量: {}", jdyApps.size());
-        log.info("获取用户应用详情: {}", JacksonUtil.writeValueAsString(jdyApps));
-    }
+    void testSingle() {
+        // 创建测试数据
+        final TestJdyDo testDo = this.createTestDo();
+        final TestJdyDo saveDataResponse = this.jdyClient.saveData(JdyDataSaveRequest.of(testDo), TestJdyDo.class);
 
-    /**
-     * 获取用户表单
-     */
-    @Test
-    void listEntry() {
-        final JdyEntryListRequest jdyEntryListRequest = new JdyEntryListRequest("68383bfeba0b36d412d89aae");
-        final List<JdyEntry> jdyEntries = this.jdyClient.listEntry(jdyEntryListRequest);
-        log.info("获取用户表单数量: {}", jdyEntries.size());
-        log.info("获取用户表单详情: {}", JacksonUtil.writeValueAsString(jdyEntries));
-    }
+        // 修改测试数据
+        saveDataResponse.setStr(IdUtil.fastSimpleUUID());
+        saveDataResponse.setTime(null);
+        final TestJdyDo updateDataResponse = this.jdyClient.updateData(JdyDataUpdateRequest.of(saveDataResponse), false, TestJdyDo.class);
+        Assert.equals(saveDataResponse.getDataId(), updateDataResponse.getDataId(), "数据不一致");
 
-    /**
-     * 获取表单字段
-     */
-    @Test
-    void listField() {
-        final TestJdyDo testJdyDo = new TestJdyDo();
-        final JdyFieldListRequest jdyFieldListRequest = new JdyFieldListRequest();
-        jdyFieldListRequest.setAppId(testJdyDo.getAppId());
-        jdyFieldListRequest.setEntryId(testJdyDo.getEntryId());
-        final JdyFieldListResponse jdyFieldListResponse = this.jdyClient.listField(jdyFieldListRequest);
-        log.info("获取表单字段数量: {}", jdyFieldListResponse.getWidgets().size());
-        log.info("获取表单字段详情: {}", JacksonUtil.writeValueAsString(jdyFieldListResponse));
+        // 根据数据ID查询数据
+        final TestJdyDo getDataResponse = this.jdyClient.getData(JdyDataGetRequest.of(updateDataResponse), TestJdyDo.class);
+        Assert.notNull(getDataResponse, "数据不存在");
+        Assert.equals(getDataResponse.getDataId(), updateDataResponse.getDataId(), "数据不一致");
 
-    }
-
-    /**
-     * 获取数据
-     */
-    @Test
-    void listData() {
+        // 批量查询
         final JdyListDataRequest jdyListDataRequest = JdyListDataRequest.of()
-                .select()
                 .from(TestJdyDo.class)
-                .eq(TestJdyDo::getNum, "1");
-        final List<TestJdyDo> response = this.jdyClient.listData(jdyListDataRequest, TestJdyDo.class);
-        log.info("listData response: {}", JacksonUtil.writeValueAsString(response));
+                .eq(TestJdyDo::getStr, updateDataResponse.getStr());
+        final List<TestJdyDo> listDataResponse = this.jdyClient.listData(jdyListDataRequest, TestJdyDo.class);
+        Assert.isTrue(listDataResponse.size() == 1, "批量查询数量不一致, 测试失败");
+
+        // 删除
+        final boolean deleteDataResponse = this.jdyClient.deleteData(JdyDataDeleteRequest.of(getDataResponse));
+        Assert.isTrue(deleteDataResponse, "删除失败");
     }
 
     /**
-     * 新增数据
+     * 测试批量
      */
     @Test
-    void saveData() {
-        final Sub sub = new Sub();
-        sub.setSubStr(IdUtil.getSnowflakeNextIdStr());
-        sub.setSubNum(IdUtil.getSnowflakeNextId());
-        sub.setSubTime(Instant.now());
-        sub.setSubFile(null);
-
-        final JdySub<Sub> subs = new JdySub<>();
-        subs.add(sub);
-        subs.add(sub);
-        subs.add(sub);
-        subs.add(sub);
-
-        final TestJdyDo testJdyDo = new TestJdyDo();
-        testJdyDo.setStr(IdUtil.getSnowflakeNextIdStr());
-        testJdyDo.setNum(IdUtil.getSnowflakeNextId());
-        testJdyDo.setTime(Instant.now());
-        testJdyDo.setFile(null);
-        testJdyDo.setSub(subs);
-
-        final JsonNode jsonNode = this.jdyClient.saveData(JdyDataSaveRequest.of(testJdyDo));
-        log.info("save response: {}", JacksonUtil.writeValueAsString(jsonNode));
-    }
-
-    /**
-     * 新增数据
-     */
-    @Test
-    void saveBatchData() {
-        final Sub sub = new Sub();
-        sub.setSubStr(IdUtil.getSnowflakeNextIdStr());
-        sub.setSubNum(IdUtil.getSnowflakeNextId());
-        sub.setSubTime(Instant.now());
-        sub.setSubFile(null);
-
-        final JdySub<Sub> subs = new JdySub<>();
-        subs.add(sub);
-        subs.add(sub);
-        subs.add(sub);
-        subs.add(sub);
-
+    void testBatch() {
+        // 创建测试数据
         final List<TestJdyDo> testJdyDos = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            final TestJdyDo testJdyDo = new TestJdyDo();
-            testJdyDo.setStr(IdUtil.getSnowflakeNextIdStr());
-            testJdyDo.setNum(IdUtil.getSnowflakeNextId());
-            testJdyDo.setTime(Instant.now());
-            testJdyDo.setFile(null);
-            testJdyDo.setSub(subs);
-            testJdyDos.add(testJdyDo);
+        for (int i = 0; i < 200; i++) {
+            testJdyDos.add(this.createTestDo());
+        }
+        final List<String> dataIds = this.jdyClient.saveBatchData(JdyDataSaveBatchRequest.of(testJdyDos));
+        Assert.isTrue(dataIds.size() == testJdyDos.size(), "批量新增数量不一致");
+        log.info("批量新增数据: {}", dataIds.size());
+
+        // 批量查询
+        final JdyListDataRequest jdyListDataRequest = JdyListDataRequest.of()
+                .from(TestJdyDo.class)
+                .in(TestJdyDo::getStr, testJdyDos.stream().map(TestJdyDo::getStr).toList());
+        final List<TestJdyDo> listDataResponse = this.jdyClient.listData(jdyListDataRequest, TestJdyDo.class);
+        Assert.isTrue(listDataResponse.size() == dataIds.size(), "批量查询数量不一致");
+        log.info("批量查询数据: {}", listDataResponse.size());
+
+        // 修改测试数据
+        final int updateSize = this.jdyClient.updateBatchData(JdyDataUpdateBatchRequest.of(this.createTestDo(), dataIds), false);
+        Assert.isTrue(updateSize == dataIds.size(), "批量修改数量不一致");
+        log.info("批量修改数据: {}", updateSize);
+
+        // 删除
+        final int deleteSize = this.jdyClient.deleteBatchData(JdyDataDeleteBatchRequest.of(listDataResponse));
+        Assert.isTrue(deleteSize == listDataResponse.size(), "批量删除数量不一致");
+        log.info("批量删除数据: {}", deleteSize);
+    }
+
+    /**
+     * 创建测试数据
+     */
+    @Nonnull
+    private TestJdyDo createTestDo() {
+        // 子表单数据
+        final Sub sub = new Sub();
+        sub.setSubStr(IdUtil.fastSimpleUUID());
+        sub.setSubNum(IdUtil.getSnowflakeNextId());
+        sub.setSubTime(Instant.now());
+        sub.setSubFile(null);
+
+        // 子表单容器
+        final JdySub<Sub> subs = new JdySub<>();
+        for (int i = 0; i < 5; i++) {
+            subs.add(sub);
         }
 
-        final List<String> ids = this.jdyClient.saveBatchData(JdyDataSaveBatchRequest.of(testJdyDos));
-        log.info("saveBatch response: {}", JacksonUtil.writeValueAsString(ids));
-    }
-
-    /**
-     * 修改数据
-     */
-    @Test
-    void updateData() {
-        // 子表单
-        final Sub sub = new Sub();
-        sub.setSubStr(IdUtil.getSnowflakeNextIdStr());
-        sub.setSubNum(IdUtil.getSnowflakeNextId());
-        sub.setSubTime(Instant.now());
-        sub.setSubFile(null);
-
-        // 子表单
-        final JdySub<Sub> subs = new JdySub<>();
-        subs.add(sub);
-        subs.add(sub);
-        subs.add(sub);
-        subs.add(sub);
-
-        // 原始数据
+        // 主表数据
         final TestJdyDo testJdyDo = new TestJdyDo();
-        testJdyDo.setStr(IdUtil.getSnowflakeNextIdStr());
+        testJdyDo.setStr(IdUtil.fastSimpleUUID());
         testJdyDo.setNum(IdUtil.getSnowflakeNextId());
         testJdyDo.setTime(Instant.now());
         testJdyDo.setFile(null);
         testJdyDo.setSub(subs);
-
-        // 新增一条数据
-        final TestJdyDo saveResponse = this.jdyClient.saveData(JdyDataSaveRequest.of(testJdyDo), TestJdyDo.class);
-        log.info("saveData response: {}", JacksonUtil.writeValueAsString(saveResponse));
-
-        // 修改这条数据
-        final TestJdyDo updateDo = new TestJdyDo();
-        updateDo.setDataId(saveResponse.getDataId());
-        updateDo.setNum(666);
-        final TestJdyDo updateResponse = this.jdyClient.updateData(JdyDataUpdateRequest.of(updateDo), true, TestJdyDo.class);
-        log.info("updateData response: {}", JacksonUtil.writeValueAsString(updateResponse));
-
+        return testJdyDo;
     }
 
     @Override
     public void accept(final JdyRequestEvent jdyRequestEvent) {
         final JdyRequestEvent.RequestInfo requestInfo = jdyRequestEvent.getSource();
-        log.info("请求回调, url: {}", requestInfo.getUrl());
-        log.info("请求回调, reqBody: {}", requestInfo.getRequestBody());
-        log.info("请求回调, resBody: {}", requestInfo.getResponseBody());
-        log.info("请求回调, time: {}", requestInfo.getDurationTime());
+        log.info("请求回调: {}", JacksonUtil.writeValueAsString(requestInfo));
     }
 
     @EqualsAndHashCode(callSuper = true)
