@@ -24,14 +24,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.dromara.hutool.core.collection.CollUtil;
 import org.dromara.hutool.core.convert.ConvertUtil;
 import org.dromara.hutool.core.date.TimeUtil;
+import org.dromara.hutool.core.io.file.FileUtil;
 import org.dromara.hutool.core.net.url.UrlBuilder;
 import org.dromara.hutool.core.net.url.UrlQuery;
 import org.dromara.hutool.core.text.StrUtil;
 import org.dromara.hutool.http.client.Request;
 import org.dromara.hutool.http.client.Response;
+import org.dromara.hutool.http.client.body.MultipartBody;
+import org.dromara.hutool.http.meta.Method;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -457,6 +463,60 @@ public class JdyClientImpl implements JdyClient {
         return successCount.get();
     }
 
+    @Nonnull
+    @Override
+    public JdyFileUploadResponse upload(@Nonnull final JdyFileUploadRequest jdyFileUploadRequest, @Nonnull final Collection<File> files) {
+        Assert.validate(jdyFileUploadRequest, "jdyFileUploadRequest valid error, cause: {}");
+        Assert.notEmpty(files, "files must not be empty");
+
+        // 文件必须存在才可以上传
+        final Set<File> fileSet = files.stream().filter(FileUtil::exists).collect(Collectors.toSet());
+        Assert.notEmpty(fileSet, "files must not be empty");
+
+        // 获取足量的文件上传凭证和上传地址
+        final Deque<JdyFileGetUploadTokenResponse> tokenAndUrls = new ArrayDeque<>();
+        final Request request = Request.of(JdyUrlEnum.GET_UPLOAD_TOKEN.getUrl())
+                .method(JdyUrlEnum.GET_UPLOAD_TOKEN.getMethod())
+                .body(JacksonUtil.writeValueAsString(jdyFileUploadRequest));
+        do {
+            final String resBody = this.request(request);
+            final List<JdyFileGetUploadTokenResponse> getUploadTokenResponses = Optional.of(resBody)
+                    .map(JacksonUtil::readTree)
+                    .map(jsonNode -> jsonNode.path("token_and_url_list"))
+                    .filter(JsonNode::isArray)
+                    .map(jsonNode -> JacksonUtil.treeToValue(jsonNode, new TypeReference<List<JdyFileGetUploadTokenResponse>>() {
+                    }))
+                    .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+            getUploadTokenResponses.forEach(item -> Assert.validate(item, "jdyGetUploadTokenResponse valid error, cause: {}"));
+            tokenAndUrls.addAll(getUploadTokenResponses);
+        } while (tokenAndUrls.size() < fileSet.size());
+
+        // 上传文件
+        final JdyFileUploadResponse jdyFileUploadResponse = new JdyFileUploadResponse();
+        jdyFileUploadResponse.setTransactionId(jdyFileUploadRequest.getTransactionId());
+        for (final File file : fileSet) {
+            final JdyFileGetUploadTokenResponse tokenAndUrl = tokenAndUrls.pop();
+
+            final HashMap<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("token", tokenAndUrl.getToken());
+            bodyMap.put("file", file);
+
+            final Request uploadFileRequest = Request.of(tokenAndUrl.getUrl())
+                    .method(Method.POST)
+                    .body(MultipartBody.of(bodyMap, StandardCharsets.UTF_8));
+            // 执行请求并重试
+            final String resBody = RetryUtil.execute(() -> this.executeRequest(uploadFileRequest), this.jdyClientConfig.getRetryPolicy());
+            final String key = Optional.of(resBody)
+                    .map(JacksonUtil::readTree)
+                    .map(jsonNode -> jsonNode.path("key").asText())
+                    .filter(StringUtils::isNotBlank)
+                    .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+            jdyFileUploadResponse.getFileKeyMap().put(file, key);
+        }
+
+        return jdyFileUploadResponse;
+    }
+
     /**
      * 请求简道云
      *
@@ -484,6 +544,9 @@ public class JdyClientImpl implements JdyClient {
         // 执行请求并重试
         return RetryUtil.execute(() -> this.executeRequest(request), this.jdyClientConfig.getRetryPolicy());
     }
+
+    @SuppressWarnings("deprecation")
+    private final List<String> whiteContentType = List.of(MediaType.APPLICATION_JSON_UTF8_VALUE, MediaType.APPLICATION_JSON_VALUE);
 
     @Nonnull
     private String executeRequest(final @Nonnull Request request) throws IOException {
@@ -516,7 +579,6 @@ public class JdyClientImpl implements JdyClient {
                 final JdyRequestEvent.RequestInfo requestInfo = new JdyRequestEvent.RequestInfo();
                 requestInfo.setUrl(request.url() == null ? null : request.url().build());
                 requestInfo.setMethod(request.method() == null ? null : request.method().name());
-                requestInfo.setRequestBody(request.bodyStr());
                 requestInfo.setRequestHeader(request.headers());
                 requestInfo.setRequestTime(startTime);
                 requestInfo.setResponseBody(bodyStr);
@@ -524,6 +586,13 @@ public class JdyClientImpl implements JdyClient {
                 requestInfo.setStatus(status);
                 requestInfo.setResponseTime(LocalDateTime.now());
                 requestInfo.setDurationTime(TimeUtil.between(requestInfo.getRequestTime(), requestInfo.getResponseTime(), ChronoUnit.MILLIS));
+
+                // 过滤请求 body 日志
+                final String contentType = request.header(HttpHeaders.CONTENT_TYPE);
+                if (StringUtils.isNotBlank(contentType) && this.whiteContentType.contains(contentType)) {
+                    requestInfo.setRequestBody(request.bodyStr());
+                }
+
                 Thread.startVirtualThread(() -> this.jdyClientConfig.getJdyRequestConsumer().accept(new JdyRequestEvent(requestInfo)));
             }
         }

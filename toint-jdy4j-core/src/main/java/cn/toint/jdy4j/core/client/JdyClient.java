@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -202,4 +204,10 @@ public interface JdyClient {
      * @return 删除成功数量
      */
     int deleteBatchData(@Nonnull JdyDataDeleteBatchRequest jdyDataDeleteBatchRequest);
+
+    /**
+     * 文件上传
+     */
+    @Nonnull
+    JdyFileUploadResponse upload(@Nonnull JdyFileUploadRequest jdyFileUploadRequest, @Nonnull Collection<File> files);
 }

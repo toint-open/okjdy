@@ -15,22 +15,30 @@
  */
 package cn.toint.jdy4j.core.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Toint
  * @date 2025/3/15
  */
 @Data
-@NoArgsConstructor
-public class JdyGetUploadTokenResponse {
+public class JdyFileUploadResponse {
     /**
-     * 文件上传地址
+     * keys
      */
-    private String url;
+    @NotEmpty
+    private Map<File, String> fileKeyMap = new HashMap<>();
+
     /**
-     * 文件上传凭证
+     * 事务
      */
-    private String token;
+    @NotBlank
+    private String transactionId;
 }
+
