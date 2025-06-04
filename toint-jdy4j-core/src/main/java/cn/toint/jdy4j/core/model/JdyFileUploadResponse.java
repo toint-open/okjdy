@@ -15,6 +15,7 @@
  */
 package cn.toint.jdy4j.core.model;
 
+import jakarta.annotation.Nonnull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
@@ -40,5 +41,16 @@ public class JdyFileUploadResponse {
      */
     @NotBlank
     private String transactionId;
+
+    @Nonnull
+    public JdyFile toJdyFile() {
+        JdyFile jdyFile = new JdyFile();
+        for (final String value : fileKeyMap.values()) {
+            final JdyFile.Detail detail = new JdyFile.Detail();
+            detail.setKey(value);
+            jdyFile.add(detail);
+        }
+        return jdyFile;
+    }
 }
 

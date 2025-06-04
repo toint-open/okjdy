@@ -58,6 +58,7 @@ public class JdyFile extends ArrayList<JdyFile.Detail> {
         /**
          * 文件上传key, 在数据查询时该值不会返回
          * 如果想清空文件, 请将key设置为空字符串或 null
+         * 注意: 重新赋值后, 会清空原有文件
          */
         @JsonProperty("key")
         private String key;
