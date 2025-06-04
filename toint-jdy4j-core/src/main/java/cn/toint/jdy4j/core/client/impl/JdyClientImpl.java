@@ -165,7 +165,6 @@ public class JdyClientImpl implements JdyClient {
 
         // 执行请求
         final String resBody = this.request(request);
-        JacksonUtil.readTree(resBody);
         return Optional.of(resBody)
                 .map(JacksonUtil::readTree)
                 .map(jsonNode -> jsonNode.get("data"))
@@ -589,20 +588,20 @@ public class JdyClientImpl implements JdyClient {
             }
 
             // 执行转换, 数字字段转数字, 其他字段一律转字符串
-            final Collection<Object> newValue = new ArrayList<>();
+            final List<Object> newValues = new ArrayList<>();
             for (final Object value : values) {
+                // 根据字段类型转换值
+                final Object newValue;
                 if (JdyFieldTypeEnum.NUMBER.getValue().equals(type)) {
-                    final Number number = ConvertUtil.toNumber(value);
-                    Assert.notNull(number, "value convert to number error");
-                    newValue.add(number);
+                    newValue = ConvertUtil.toNumber(value);
                 } else {
                     // 可以是空字符串, 但是不能是 null
-                    final String str = ConvertUtil.toStr(value);
-                    Assert.notNull(str, "value convert to str error");
-                    newValue.add(str);
+                    newValue = ConvertUtil.toStr(value);
                 }
+                Assert.notNull(newValue, "字段[" + fieldName + "]值转换失败");
+                newValues.add(newValue);
             }
-            condition.setValue(newValue);
+            condition.setValue(newValues);
         }
     }
 }
