@@ -96,6 +96,7 @@ public class JdyDataSaveRequest {
     }
 
     public JdyDataSaveRequest transactionId(final String transactionId) {
+        Assert.notBlank(transactionId, "transactionId must not be blank");
         this.transactionId = transactionId;
         return this;
     }

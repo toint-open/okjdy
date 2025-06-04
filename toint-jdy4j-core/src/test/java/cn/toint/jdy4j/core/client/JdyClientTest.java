@@ -97,7 +97,7 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
      * 新增数据
      */
     @Test
-    void save() {
+    void saveDataData() {
         final Sub sub = new Sub();
         sub.setSubStr(IdUtil.getSnowflakeNextIdStr());
         sub.setSubNum(IdUtil.getSnowflakeNextId());
@@ -117,7 +117,7 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
         testJdyDo.setFile(null);
         testJdyDo.setSub(subs);
 
-        final JsonNode jsonNode = this.jdyClient.save(JdyDataSaveRequest.of(testJdyDo));
+        final JsonNode jsonNode = this.jdyClient.saveData(JdyDataSaveRequest.of(testJdyDo));
         log.info("save response: {}", JacksonUtil.writeValueAsString(jsonNode));
     }
 

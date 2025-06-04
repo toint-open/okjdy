@@ -263,7 +263,7 @@ public class JdyClientImpl implements JdyClient {
 
     @Nonnull
     @Override
-    public JsonNode save(@Nonnull final JdyDataSaveRequest jdyDataSaveRequest) {
+    public JsonNode saveData(@Nonnull final JdyDataSaveRequest jdyDataSaveRequest) {
         Assert.validate(jdyDataSaveRequest, "jdyDataSaveRequest valid error, cause: {}");
 
         // 转换 data
@@ -285,8 +285,49 @@ public class JdyClientImpl implements JdyClient {
 
     @Nonnull
     @Override
-    public <T> T save(@Nonnull final JdyDataSaveRequest jdyDataSaveRequest, final @Nonnull Class<T> responseClass) {
-        return JacksonUtil.treeToValue(this.save(jdyDataSaveRequest), responseClass);
+    public <T> T saveData(@Nonnull final JdyDataSaveRequest jdyDataSaveRequest, final @Nonnull Class<T> responseClass) {
+        return JacksonUtil.treeToValue(this.saveData(jdyDataSaveRequest), responseClass);
+    }
+
+    @Nonnull
+    @Override
+    public List<String> saveBatchData(@Nonnull final JdyDataSaveBatchRequest jdyDataSaveBatchRequest) {
+        Assert.validate(jdyDataSaveBatchRequest, "jdyDataSaveRequest valid error, cause: {}");
+
+        // 待保存的数据列表
+        final JsonNode datas = jdyDataSaveBatchRequest.getDatas();
+        Assert.notEmpty(datas, "datas must not be empty");
+        Assert.isTrue(datas.isArray(), "datas must be array");
+
+        // 字段信息
+        final JdyFieldListResponse jdyFieldListResponse = this.listField(JdyFieldListRequest.of(datas.path(0)));
+
+        // 新数据列表
+        final ArrayList<JsonNode> newDatas = new ArrayList<>();
+        for (final JsonNode item : datas) {
+            final JsonNode newData = JdyDataRequestConvertUtil.convert(item, jdyFieldListResponse.getWidgets());
+            newDatas.add(newData);
+        }
+
+        // 每次保存100条
+        final List<String> successIds = new ArrayList<>();
+        for (final List<JsonNode> jsonNodes : CollUtil.partition(newDatas, 100)) {
+            jdyDataSaveBatchRequest.setDatas(JacksonUtil.valueToTree(jsonNodes));
+            final Request request = Request.of(JdyUrlEnum.SAVE_BATCH_DATA.getUrl())
+                    .method(JdyUrlEnum.SAVE_BATCH_DATA.getMethod())
+                    .body(JacksonUtil.writeValueAsString(jdyDataSaveBatchRequest));
+
+            final String resBody = this.request(request);
+            final List<String> ids = Optional.of(resBody)
+                    .map(JacksonUtil::readTree)
+                    .map(jsonNode -> jsonNode.path("success_ids"))
+                    .filter(JsonNode::isArray)
+                    .map(jsonNode -> JacksonUtil.treeToValue(jsonNode, new TypeReference<List<String>>() {
+                    }))
+                    .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+            successIds.addAll(ids);
+        }
+        return successIds;
     }
 
     @Nonnull

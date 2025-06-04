@@ -133,13 +133,22 @@ public interface JdyClient {
      * 新增数据
      */
     @Nonnull
-    JsonNode save(@Nonnull JdyDataSaveRequest jdyDataSaveRequest);
+    JsonNode saveData(@Nonnull JdyDataSaveRequest jdyDataSaveRequest);
 
     /**
      * 新增数据
      */
     @Nonnull
-    <T> T save(@Nonnull JdyDataSaveRequest jdyDataSaveRequest, @Nonnull Class<T> responseClass);
+    <T> T saveData(@Nonnull JdyDataSaveRequest jdyDataSaveRequest, @Nonnull Class<T> responseClass);
+
+    /**
+     * 新增数据
+     *
+     * @param jdyDataSaveBatchRequest jdyDataSaveRequest
+     * @return 创建成功的数据的 ID 列表
+     */
+    @Nonnull
+    List<String> saveBatchData(@Nonnull JdyDataSaveBatchRequest jdyDataSaveBatchRequest);
 
     /**
      * 请求

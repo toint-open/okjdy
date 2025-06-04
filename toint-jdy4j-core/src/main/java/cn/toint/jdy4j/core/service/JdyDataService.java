@@ -211,7 +211,7 @@ public interface JdyDataService {
      * @param insertBatchRequest insertBatchRequest
      * @return 新建成功的数据编号
      */
-    List<String> insertBatch(JdyInsertBatchRequest insertBatchRequest);
+    List<String> insertBatch(JdyDataSaveBatchRequest insertBatchRequest);
 
     /**
      * 修改单条数据
