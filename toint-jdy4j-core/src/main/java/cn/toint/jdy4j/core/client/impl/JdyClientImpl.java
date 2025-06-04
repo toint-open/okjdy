@@ -332,6 +332,120 @@ public class JdyClientImpl implements JdyClient {
 
     @Nonnull
     @Override
+    public JsonNode updateData(@Nonnull final JdyDataUpdateRequest jdyDataUpdateRequest, final boolean ignoreNull) {
+        Assert.validate(jdyDataUpdateRequest, "jdyDataUpdateRequest valid error, cause: {}");
+
+        // 忽略 null
+        if (ignoreNull) {
+            final Iterator<JsonNode> iterator = jdyDataUpdateRequest.getData().iterator();
+            while (iterator.hasNext()) {
+                if (JacksonUtil.isNull(iterator.next())) {
+                    iterator.remove();
+                }
+            }
+        }
+
+        // 转换 data
+        final JdyFieldListResponse jdyFieldListResponse = this.listField(JdyFieldListRequest.of(jdyDataUpdateRequest.getData()));
+        final JsonNode newData = JdyDataRequestConvertUtil.convert(jdyDataUpdateRequest.getData(), jdyFieldListResponse.getWidgets());
+        jdyDataUpdateRequest.setData(newData);
+
+        final Request request = Request.of(JdyUrlEnum.UPDATE_ONE_DATA.getUrl())
+                .method(JdyUrlEnum.UPDATE_ONE_DATA.getMethod())
+                .body(JacksonUtil.writeValueAsString(jdyDataUpdateRequest));
+
+        final String resBody = this.request(request);
+        return Optional.of(resBody)
+                .map(JacksonUtil::readTree)
+                .map(jsonNode -> jsonNode.path("data"))
+                .filter(JacksonUtil::isNotNull)
+                .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+    }
+
+    @Nonnull
+    @Override
+    public <T extends JdyDo> T updateData(@Nonnull final JdyDataUpdateRequest jdyDataUpdateRequest, final boolean ignoreNull, @Nonnull final Class<T> responseType) {
+        Assert.notNull(responseType, "responseType must not be null");
+        return JacksonUtil.treeToValue(this.updateData(jdyDataUpdateRequest, ignoreNull), responseType);
+    }
+
+    @Override
+    public int updateBatchData(@Nonnull final JdyDataUpdateBatchRequest jdyDataUpdateBatchRequest, final boolean ignoreNull) {
+        Assert.validate(jdyDataUpdateBatchRequest, "jdyDataUpdateBatchRequest valid error, cause: {}");
+
+        // 忽略 null
+        if (ignoreNull) {
+            final Iterator<JsonNode> iterator = jdyDataUpdateBatchRequest.getData().iterator();
+            while (iterator.hasNext()) {
+                if (JacksonUtil.isNull(iterator.next())) {
+                    iterator.remove();
+                }
+            }
+        }
+
+        // 转换 data
+        final JdyFieldListResponse jdyFieldListResponse = this.listField(JdyFieldListRequest.of(jdyDataUpdateBatchRequest.getData()));
+        final JsonNode newData = JdyDataRequestConvertUtil.convert(jdyDataUpdateBatchRequest.getData(), jdyFieldListResponse.getWidgets());
+        jdyDataUpdateBatchRequest.setData(newData);
+
+        final AtomicInteger successCount = new AtomicInteger();
+        CollUtil.partition(jdyDataUpdateBatchRequest.getDataIds(), 100).forEach(dataIds -> {
+            jdyDataUpdateBatchRequest.setDataIds(dataIds);
+            final Request request = Request.of(JdyUrlEnum.UPDATE_BATCH_DATA.getUrl())
+                    .method(JdyUrlEnum.UPDATE_BATCH_DATA.getMethod())
+                    .body(JacksonUtil.writeValueAsString(jdyDataUpdateBatchRequest));
+
+            final String resBody = this.request(request);
+            final int count = Optional.of(resBody)
+                    .map(JacksonUtil::readTree)
+                    .map(jsonNode -> jsonNode.path("success_count").asInt(-1))
+                    .filter(num -> num >= 0)
+                    .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+            successCount.addAndGet(count);
+        });
+
+        return successCount.get();
+    }
+
+    @Override
+    public boolean deleteData(@Nonnull final JdyDataDeleteRequest jdyDataDeleteRequest) {
+        Assert.validate(jdyDataDeleteRequest, "jdyDataDeleteRequest valid error, cause: {}");
+
+        final Request request = Request.of(JdyUrlEnum.DELETE_ONE_DATA.getUrl())
+                .method(JdyUrlEnum.DELETE_ONE_DATA.getMethod())
+                .body(JacksonUtil.writeValueAsString(jdyDataDeleteRequest));
+
+        final String resBody = this.request(request);
+        final String response = Optional.of(resBody)
+                .map(JacksonUtil::readTree)
+                .map(jsonNode -> jsonNode.path("status").asText())
+                .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+        return "success".equals(response);
+    }
+
+    @Override
+    public int deleteBatchData(@Nonnull final JdyDataDeleteBatchRequest jdyDataDeleteBatchRequest) {
+        Assert.validate(jdyDataDeleteBatchRequest, "jdyDataDeleteBatchRequest valid error, cause: {}");
+
+        final AtomicInteger successCount = new AtomicInteger();
+        CollUtil.partition(jdyDataDeleteBatchRequest.getDataIds(), 100).forEach(dataIds -> {
+            jdyDataDeleteBatchRequest.setDataIds(dataIds);
+            final Request request = Request.of(JdyUrlEnum.DELETE_BATCH_DATA.getUrl())
+                    .method(JdyUrlEnum.DELETE_BATCH_DATA.getMethod())
+                    .body(JacksonUtil.writeValueAsString(jdyDataDeleteBatchRequest));
+
+            final String resBody = this.request(request);
+            final int count = Optional.of(resBody)
+                    .map(JacksonUtil::readTree)
+                    .map(jsonNode -> jsonNode.path("success_count").asInt())
+                    .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
+            successCount.addAndGet(count);
+        });
+        return successCount.get();
+    }
+
+    @Nonnull
+    @Override
     public String request(@Nonnull final Request request) {
         Assert.notNull(request, "request must not be null");
 
@@ -358,7 +472,6 @@ public class JdyClientImpl implements JdyClient {
         // 简道云所有 API 使用状态码 + 错误码的响应方式来表示错误原因。
         // 接口正确统一返回HTTP 状态码为 2xx 的正确响应。
         // 接口错误则统一返回 HTTP 状态码为 400 的错误响应，同时响应内容会返回错误码（code）和错误信息（msg）
-
         String bodyStr = null;
         Integer status = null;
         Map<String, List<String>> headers = null;

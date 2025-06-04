@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -97,7 +98,7 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
      * 新增数据
      */
     @Test
-    void saveDataData() {
+    void saveData() {
         final Sub sub = new Sub();
         sub.setSubStr(IdUtil.getSnowflakeNextIdStr());
         sub.setSubNum(IdUtil.getSnowflakeNextId());
@@ -119,6 +120,78 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
 
         final JsonNode jsonNode = this.jdyClient.saveData(JdyDataSaveRequest.of(testJdyDo));
         log.info("save response: {}", JacksonUtil.writeValueAsString(jsonNode));
+    }
+
+    /**
+     * 新增数据
+     */
+    @Test
+    void saveBatchData() {
+        final Sub sub = new Sub();
+        sub.setSubStr(IdUtil.getSnowflakeNextIdStr());
+        sub.setSubNum(IdUtil.getSnowflakeNextId());
+        sub.setSubTime(Instant.now());
+        sub.setSubFile(null);
+
+        final JdySub<Sub> subs = new JdySub<>();
+        subs.add(sub);
+        subs.add(sub);
+        subs.add(sub);
+        subs.add(sub);
+
+        final List<TestJdyDo> testJdyDos = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            final TestJdyDo testJdyDo = new TestJdyDo();
+            testJdyDo.setStr(IdUtil.getSnowflakeNextIdStr());
+            testJdyDo.setNum(IdUtil.getSnowflakeNextId());
+            testJdyDo.setTime(Instant.now());
+            testJdyDo.setFile(null);
+            testJdyDo.setSub(subs);
+            testJdyDos.add(testJdyDo);
+        }
+
+        final List<String> ids = this.jdyClient.saveBatchData(JdyDataSaveBatchRequest.of(testJdyDos));
+        log.info("saveBatch response: {}", JacksonUtil.writeValueAsString(ids));
+    }
+
+    /**
+     * 修改数据
+     */
+    @Test
+    void updateData() {
+        // 子表单
+        final Sub sub = new Sub();
+        sub.setSubStr(IdUtil.getSnowflakeNextIdStr());
+        sub.setSubNum(IdUtil.getSnowflakeNextId());
+        sub.setSubTime(Instant.now());
+        sub.setSubFile(null);
+
+        // 子表单
+        final JdySub<Sub> subs = new JdySub<>();
+        subs.add(sub);
+        subs.add(sub);
+        subs.add(sub);
+        subs.add(sub);
+
+        // 原始数据
+        final TestJdyDo testJdyDo = new TestJdyDo();
+        testJdyDo.setStr(IdUtil.getSnowflakeNextIdStr());
+        testJdyDo.setNum(IdUtil.getSnowflakeNextId());
+        testJdyDo.setTime(Instant.now());
+        testJdyDo.setFile(null);
+        testJdyDo.setSub(subs);
+
+        // 新增一条数据
+        final TestJdyDo saveResponse = this.jdyClient.saveData(JdyDataSaveRequest.of(testJdyDo), TestJdyDo.class);
+        log.info("saveData response: {}", JacksonUtil.writeValueAsString(saveResponse));
+
+        // 修改这条数据
+        final TestJdyDo updateDo = new TestJdyDo();
+        updateDo.setDataId(saveResponse.getDataId());
+        updateDo.setNum(666);
+        final TestJdyDo updateResponse = this.jdyClient.updateData(JdyDataUpdateRequest.of(updateDo), true, TestJdyDo.class);
+        log.info("updateData response: {}", JacksonUtil.writeValueAsString(updateResponse));
+
     }
 
     @Override

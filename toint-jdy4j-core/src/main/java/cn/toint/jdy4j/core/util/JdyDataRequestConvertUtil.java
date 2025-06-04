@@ -127,10 +127,15 @@ public class JdyDataRequestConvertUtil {
         // 创建新的数据对象
         final ObjectNode newData = JacksonUtil.ofObjectNode();
         fieldNameTypeMap.forEach((fieldName, field) -> {
+            // 忽略未传入的字段, 让简道云不处理该字段
+            if (!data.has(fieldName)) {
+                return;
+            }
+
             // 获取原始值
             final JsonNode oldValue = data.get(fieldName);
+            // 对于null值，简道云API会清空该字段
             if (JacksonUtil.isNull(oldValue)) {
-                // 对于null值，简道云API会清空该字段
                 newData.set(fieldName, JdyDataRequestConvertUtil.ofNewValue(null));
                 return;
             }

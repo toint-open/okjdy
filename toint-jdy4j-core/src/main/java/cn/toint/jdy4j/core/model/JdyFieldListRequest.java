@@ -46,7 +46,7 @@ public class JdyFieldListRequest {
     public JdyFieldListRequest() {
     }
 
-    public JdyFieldListRequest(final String appId, final String entryId) {
+    public JdyFieldListRequest(@Nonnull final String appId, @Nonnull final String entryId) {
         Assert.notNull(appId, "appId must not be null");
         Assert.notNull(entryId, "entryId must not be null");
         this.appId = appId;

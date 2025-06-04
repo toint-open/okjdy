@@ -15,68 +15,70 @@
  */
 package cn.toint.jdy4j.core.model;
 
+import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.dromara.hutool.core.collection.CollUtil;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Toint
  * @date 2025/3/15
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class JdyDeleteBatchRequest {
+public class JdyDataDeleteBatchRequest {
     /**
      * 应用ID
-     * 是否必填:是
      */
     @JsonProperty("app_id")
     @NotBlank
     private String appId;
+
     /**
      * 表单ID
-     * 是否必填:是
      */
     @JsonProperty("entry_id")
     @NotBlank
     private String entryId;
+
     /**
      * 数据ID
-     * 是否必填:是
      */
     @JsonProperty("data_ids")
-    @NotNull
     @NotEmpty
     private Collection<String> dataIds;
 
-    public static JdyDeleteBatchRequest of(final String appId, final String entryId, final Collection<String> dataIds) {
-        final JdyDeleteBatchRequest deleteBatchRequest = new JdyDeleteBatchRequest();
-        deleteBatchRequest.setAppId(appId);
-        deleteBatchRequest.setEntryId(entryId);
-        deleteBatchRequest.setDataIds(dataIds);
-        return deleteBatchRequest;
+    public JdyDataDeleteBatchRequest() {
     }
 
-    public static JdyDeleteBatchRequest of(final Iterable<?> datas) {
-        List<JdyDo> jdyTables = JacksonUtil.convertValue(datas, new TypeReference<>() {
+    public JdyDataDeleteBatchRequest(final String appId, final String entryId, final Collection<String> dataIds) {
+        Assert.notBlank(appId, "appId must not be blank");
+        Assert.notBlank(entryId, "entryId must not be blank");
+        Assert.notEmpty(dataIds, "dataIds must not be empty");
+        this.appId = appId;
+        this.entryId = entryId;
+        this.dataIds = dataIds;
+    }
+
+    public static JdyDataDeleteBatchRequest of(final JsonNode data) {
+        Assert.notNull(data, "data must not be null");
+        Assert.isTrue(data.isArray(), "data must not be array");
+        final List<JdyDo> jdyDos = JacksonUtil.treeToValue(data, new TypeReference<>() {
         });
-        return JdyDeleteBatchRequest.of(
-                jdyTables.getFirst().getAppId(),
-                jdyTables.getFirst().getEntryId(),
-                CollUtil.map(jdyTables, JdyDo::getDataId)
-        );
+        return JdyDataDeleteBatchRequest.of(jdyDos);
+    }
+
+    public static <T extends JdyDo> JdyDataDeleteBatchRequest of(final List<T> data) {
+        Assert.notEmpty(data, "data must not be empty");
+        final Set<String> dataIds = data.stream().map(JdyDo::getDataId).collect(Collectors.toSet());
+        return new JdyDataDeleteBatchRequest(data.getFirst().getAppId(), data.getFirst().getEntryId(), dataIds);
     }
 }

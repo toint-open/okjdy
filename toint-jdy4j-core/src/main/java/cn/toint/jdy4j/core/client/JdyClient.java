@@ -151,6 +151,51 @@ public interface JdyClient {
     List<String> saveBatchData(@Nonnull JdyDataSaveBatchRequest jdyDataSaveBatchRequest);
 
     /**
+     * 修改数据
+     *
+     * @param jdyDataUpdateRequest jdyDataUpdateRequest
+     * @param ignoreNull           是否忽略 null 值, true: null 字段不会更新至简道云; false: null 字段会更新至简道云.
+     * @return 新的数据
+     */
+    @Nonnull
+    JsonNode updateData(@Nonnull JdyDataUpdateRequest jdyDataUpdateRequest, boolean ignoreNull);
+
+    /**
+     * 修改数据
+     *
+     * @param jdyDataUpdateRequest jdyDataUpdateRequest
+     * @param ignoreNull           是否忽略 null 值, true: null 字段不会更新至简道云; false: null 字段会更新至简道云.
+     * @param responseType         返回值类型
+     * @return 新的数据
+     */
+    @Nonnull
+    <T extends JdyDo> T updateData(@Nonnull JdyDataUpdateRequest jdyDataUpdateRequest, boolean ignoreNull, @Nonnull Class<T> responseType);
+
+    /**
+     * 修改数据 (数据编号列表数据均修改为传入的数据)
+     *
+     * @param jdyDataUpdateBatchRequest jdyDataUpdateBatchRequest
+     * @param ignoreNull                是否忽略 null 值, true: null 字段不会更新至简道云; false: null 字段会更新至简道云.
+     * @return 修改数据数量
+     */
+    int updateBatchData(@Nonnull JdyDataUpdateBatchRequest jdyDataUpdateBatchRequest, boolean ignoreNull);
+
+    /**
+     * 删除数据
+     *
+     * @param jdyDataDeleteRequest jdyDataDeleteRequest
+     */
+    boolean deleteData(@Nonnull JdyDataDeleteRequest jdyDataDeleteRequest);
+
+    /**
+     * 删除数据
+     *
+     * @param jdyDataDeleteBatchRequest jdyDataDeleteBatchRequest
+     * @return
+     */
+    int deleteBatchData(@Nonnull JdyDataDeleteBatchRequest jdyDataDeleteBatchRequest);
+
+    /**
      * 请求
      */
     @Nonnull

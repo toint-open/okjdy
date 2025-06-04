@@ -15,61 +15,66 @@
  */
 package cn.toint.jdy4j.core.model;
 
+import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * @author Toint
  * @date 2025/3/15
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class JdyDeleteOneRequest {
+public class JdyDataDeleteRequest {
     /**
      * 应用ID
-     * 是否必填:是
      */
     @JsonProperty("app_id")
     @NotBlank
     private String appId;
+
     /**
      * 表单ID
-     * 是否必填:是
      */
     @JsonProperty("entry_id")
     @NotBlank
     private String entryId;
+
     /**
      * 数据ID
-     * 是否必填:是
      */
     @JsonProperty("data_id")
     @NotBlank
     private String dataId;
+
     /**
      * 是否触发智能助手
-     * 是否必填:否
      */
     @JsonProperty("is_start_trigger")
     private boolean startTrigger = true;
 
-    public static JdyDeleteOneRequest of(final String appId, final String entryId, final String dataId) {
-        final JdyDeleteOneRequest deleteOneRequest = new JdyDeleteOneRequest();
-        deleteOneRequest.setAppId(appId);
-        deleteOneRequest.setEntryId(entryId);
-        deleteOneRequest.setDataId(dataId);
-        return deleteOneRequest;
+    public JdyDataDeleteRequest() {
     }
 
-    public static JdyDeleteOneRequest of(final Object data) {
-        final JdyDo jdyTable = JacksonUtil.convertValue(data, JdyDo.class);
-        return JdyDeleteOneRequest.of(jdyTable.getAppId(), jdyTable.getEntryId(), jdyTable.getDataId());
+    public JdyDataDeleteRequest(final String appId, final String entryId, final String dataId) {
+        Assert.notBlank(appId, "appId must not be blank");
+        Assert.notBlank(entryId, "entryId must not be blank");
+        Assert.notBlank(dataId, "dataId must not be blank");
+        this.appId = appId;
+        this.entryId = entryId;
+        this.dataId = dataId;
+    }
+
+    public static JdyDataDeleteRequest of(final JsonNode data) {
+        Assert.notNull(data, "data must not be null");
+        final JdyDo jdyDo = JacksonUtil.treeToValue(data, JdyDo.class);
+        return new JdyDataDeleteRequest(jdyDo.getAppId(), jdyDo.getEntryId(), jdyDo.getDataId());
+    }
+
+    public static <T extends JdyDo> JdyDataDeleteRequest of(final T data) {
+        Assert.notNull(data, "data must not be null");
+        return new JdyDataDeleteRequest(data.getAppId(), data.getEntryId(), data.getDataId());
     }
 }

@@ -226,7 +226,7 @@ public interface JdyDataService {
      * @param ignoreNull       忽略null值,true:null值属性不会请求至简道云,简道云会保持原值处理,false:null至属性会被请求至简道云,简道云会将该属性值清空
      * @return 返回修改后的新数据，内容同查询单条数据接口
      */
-    ObjectNode updateOne(JdyUpdateOneRequest updateOneRequest, boolean ignoreNull);
+    ObjectNode updateOne(JdyDataUpdateRequest updateOneRequest, boolean ignoreNull);
 
     /**
      * 修改单条数据
@@ -242,7 +242,7 @@ public interface JdyDataService {
      * @param valueType        反序列化
      * @return 返回修改后的新数据，内容同查询单条数据接口
      */
-    <T> T updateOne(JdyUpdateOneRequest updateOneRequest, boolean ignoreNull, Class<T> valueType);
+    <T> T updateOne(JdyDataUpdateRequest updateOneRequest, boolean ignoreNull, Class<T> valueType);
 
     /**
      * 修改多条数据
@@ -255,7 +255,7 @@ public interface JdyDataService {
      * @param ignoreNull         忽略null值,true:null值属性不会请求至简道云,简道云会保持原值处理,false:null至属性会被请求至简道云,简道云会将该属性值清空
      * @return 修改成功的数据数量
      */
-    int updateBatch(JdyUpdateBatchRequest updateBatchRequest, boolean ignoreNull);
+    int updateBatch(JdyDataUpdateBatchRequest updateBatchRequest, boolean ignoreNull);
 
     /**
      * 删除单条数据
@@ -263,7 +263,7 @@ public interface JdyDataService {
      * @param deleteOneRequest deleteOneRequest
      * @return 删除结果
      */
-    boolean deleteOne(JdyDeleteOneRequest deleteOneRequest);
+    boolean deleteOne(JdyDataDeleteRequest deleteOneRequest);
 
     /**
      * 删除多条数据
@@ -271,5 +271,5 @@ public interface JdyDataService {
      * @param deleteBatchRequest deleteBatchRequest
      * @return 删除成功数据数量
      */
-    int deleteBatch(JdyDeleteBatchRequest deleteBatchRequest);
+    int deleteBatch(JdyDataDeleteBatchRequest deleteBatchRequest);
 }

@@ -15,21 +15,17 @@
  */
 package cn.toint.jdy4j.core.model;
 
+import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.JacksonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.dromara.hutool.core.collection.CollUtil;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -37,47 +33,57 @@ import java.util.Set;
  * @date 2025/3/15
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-public class JdyUpdateBatchRequest {
+public class JdyDataUpdateBatchRequest {
     /**
      * 应用ID
-     * 是否必填:是
      */
     @JsonProperty("app_id")
     @NotBlank
     private String appId;
+
     /**
      * 表单ID
-     * 是否必填:是
      */
     @JsonProperty("entry_id")
     @NotBlank
     private String entryId;
+
     /**
      * 数据ID
-     * 是否必填:是
      */
     @JsonProperty("data_ids")
     @NotNull
     private Collection<String> dataIds;
+
     /**
      * 数据(暂不支持子表单)
-     * 是否必填:是
      */
     @JsonProperty("data")
     @NotNull
     private JsonNode data;
+
     /**
      * 事务ID；transaction_id 用于绑定一批上传的文件，若数据中包含附件或图片控件，则 transaction_id 必须与“获取文件上传凭证和上传地址接口”中的 transaction_id 参数相同。
-     * 是否必填:否
      */
     @JsonProperty("transaction_id")
     private String transactionId;
 
-    public static JdyUpdateBatchRequest of(final String appId, final String entryId, final JsonNode data, final Collection<String> dataIds) {
-        final JdyUpdateBatchRequest updateBatchRequest = new JdyUpdateBatchRequest();
+    public JdyDataUpdateBatchRequest() {
+    }
+
+    public JdyDataUpdateBatchRequest(final String appId, final String entryId, final Collection<String> dataIds, final JsonNode data) {
+        Assert.notBlank(appId, "appId can not be blank");
+        Assert.notBlank(entryId, "entryId can not be blank");
+        Assert.notEmpty(dataIds, "dataIds can not be null");
+        Assert.notNull(data, "data can not be null");
+        this.appId = appId;
+        this.entryId = entryId;
+        this.dataIds = dataIds;
+        this.data = data;
+    }
+
+    public static JdyDataUpdateBatchRequest of(final String appId, final String entryId, final JsonNode data, final Collection<String> dataIds) {
+        final JdyDataUpdateBatchRequest updateBatchRequest = new JdyDataUpdateBatchRequest();
         updateBatchRequest.setAppId(appId);
         updateBatchRequest.setEntryId(entryId);
         updateBatchRequest.setData(data);
@@ -85,22 +91,14 @@ public class JdyUpdateBatchRequest {
         return updateBatchRequest;
     }
 
-    public static JdyUpdateBatchRequest of(final Object data, final Collection<String> dataIds) {
-        final JdyDo jdyTable = JacksonUtil.convertValue(data, JdyDo.class);
-        return JdyUpdateBatchRequest.of(jdyTable.getAppId(), jdyTable.getEntryId(), JacksonUtil.valueToTree(data), dataIds);
+    public static JdyDataUpdateBatchRequest of(final JsonNode data, final Collection<String> dataIds) {
+        Assert.notNull(data, "data can not be null");
+        Assert.notEmpty(dataIds, "dataIds can not be null");
+        final JdyDo jdyDo = JacksonUtil.treeToValue(data, JdyDo.class);
+        return JdyDataUpdateBatchRequest.of(jdyDo.getAppId(), jdyDo.getEntryId(), JacksonUtil.valueToTree(data), dataIds);
     }
 
-    /**
-     * 批量将所有数据改为列表第一个数据
-     */
-    public static JdyUpdateBatchRequest of(final Iterable<?> datas) {
-        final JsonNode jsonNode = JacksonUtil.valueToTree(datas);
-        final List<JdyDo> jdyTables = JacksonUtil.treeToValue(jsonNode, new TypeReference<>() {
-        });
-        return JdyUpdateBatchRequest.of(jsonNode.get(0), CollUtil.map(jdyTables, JdyDo::getDataId));
-    }
-
-    public JdyUpdateBatchRequest transactionId(final String transactionId) {
+    public JdyDataUpdateBatchRequest transactionId(final String transactionId) {
         this.transactionId = transactionId;
         return this;
     }
