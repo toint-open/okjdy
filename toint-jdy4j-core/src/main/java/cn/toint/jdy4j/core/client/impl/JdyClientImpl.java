@@ -10,10 +10,7 @@ import cn.toint.jdy4j.core.model.*;
 import cn.toint.jdy4j.core.util.JdyDataRequestConvertUtil;
 import cn.toint.jdy4j.core.util.JdyHttpUtil;
 import cn.toint.tool.exception.RetryException;
-import cn.toint.tool.util.Assert;
-import cn.toint.tool.util.ExceptionUtil;
-import cn.toint.tool.util.JacksonUtil;
-import cn.toint.tool.util.RetryUtil;
+import cn.toint.tool.util.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -21,6 +18,8 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.dromara.hutool.core.cache.CacheUtil;
+import org.dromara.hutool.core.cache.impl.TimedCache;
 import org.dromara.hutool.core.collection.CollUtil;
 import org.dromara.hutool.core.convert.ConvertUtil;
 import org.dromara.hutool.core.date.TimeUtil;
@@ -38,6 +37,7 @@ import org.springframework.http.MediaType;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -55,6 +55,15 @@ public class JdyClientImpl implements JdyClient {
      * 客户端配置
      */
     private final JdyClientConfig jdyClientConfig;
+
+    @SuppressWarnings("deprecation")
+    private final List<String> whiteContentType = List.of(MediaType.APPLICATION_JSON_UTF8_VALUE, MediaType.APPLICATION_JSON_VALUE);
+
+    /**
+     * 字段缓存, 避免频繁访问 api 引发瓶颈
+     * 缓存30s, 30s 过后自动清除缓存, 直至下一次该表单被再次查询
+     */
+    private final TimedCache<String, JdyFieldListResponse> fieldCache = CacheUtil.newTimedCache(Duration.ofSeconds(30).toMillis(), Duration.ofSeconds(30).toMillis());
 
     public JdyClientImpl(@Nonnull final JdyClientConfig jdyClientConfig) {
         Assert.validate(jdyClientConfig, "jdyClient init error, cause: {}");
@@ -148,6 +157,13 @@ public class JdyClientImpl implements JdyClient {
     public @Nonnull JdyFieldListResponse listField(@Nonnull final JdyFieldListRequest jdyFieldListRequest) {
         Assert.validate(jdyFieldListRequest, "jdyFieldListRequest valid error, cause: {}");
 
+        // 先从缓存找, 缓存不存在再调用 api
+        final String key = KeyBuilderUtil.of(jdyFieldListRequest.getAppId()).build(jdyFieldListRequest.getEntryId());
+        final JdyFieldListResponse responseByCache = this.fieldCache.get(key, false);
+        if (responseByCache != null) {
+            return responseByCache;
+        }
+
         final Request request = Request.of(JdyUrlEnum.LIST_WIDGET.getUrl())
                 .method(JdyUrlEnum.LIST_WIDGET.getMethod())
                 .body(JacksonUtil.writeValueAsString(jdyFieldListRequest));
@@ -157,6 +173,7 @@ public class JdyClientImpl implements JdyClient {
                 .map(str -> JacksonUtil.readValue(str, JdyFieldListResponse.class))
                 .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
         Assert.validate(jdyFieldListResponse, "简道云响应异常, body: {}, cause: {}", resBody);
+        this.fieldCache.put(key, jdyFieldListResponse);
         return jdyFieldListResponse;
     }
 
@@ -465,7 +482,7 @@ public class JdyClientImpl implements JdyClient {
 
     @Nonnull
     @Override
-    public JdyFileUploadResponse upload(@Nonnull final JdyFileUploadRequest jdyFileUploadRequest, @Nonnull final Collection<File> files) {
+    public JdyFileUploadResponse uploadFile(@Nonnull final JdyFileUploadRequest jdyFileUploadRequest, @Nonnull final Collection<File> files) {
         Assert.validate(jdyFileUploadRequest, "jdyFileUploadRequest valid error, cause: {}");
         Assert.notEmpty(files, "files must not be empty");
 
@@ -544,9 +561,6 @@ public class JdyClientImpl implements JdyClient {
         // 执行请求并重试
         return RetryUtil.execute(() -> this.executeRequest(request), this.jdyClientConfig.getRetryPolicy());
     }
-
-    @SuppressWarnings("deprecation")
-    private final List<String> whiteContentType = List.of(MediaType.APPLICATION_JSON_UTF8_VALUE, MediaType.APPLICATION_JSON_VALUE);
 
     @Nonnull
     private String executeRequest(final @Nonnull Request request) throws IOException {

@@ -209,5 +209,5 @@ public interface JdyClient {
      * 文件上传
      */
     @Nonnull
-    JdyFileUploadResponse upload(@Nonnull JdyFileUploadRequest jdyFileUploadRequest, @Nonnull Collection<File> files);
+    JdyFileUploadResponse uploadFile(@Nonnull JdyFileUploadRequest jdyFileUploadRequest, @Nonnull Collection<File> files);
 }
