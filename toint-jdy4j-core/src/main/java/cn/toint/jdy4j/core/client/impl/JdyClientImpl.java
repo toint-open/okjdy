@@ -150,7 +150,7 @@ public class JdyClientImpl implements JdyClient {
         final JdyFieldListResponse jdyFieldListResponse = Optional.of(resBody)
                 .map(str -> JacksonUtil.readValue(str, JdyFieldListResponse.class))
                 .orElseThrow(() -> ExceptionUtil.wrapRuntimeException("简道云响应异常, body: {}", resBody));
-        Assert.validate(jdyFieldListRequest, "简道云响应异常, body: {}, cause: {}", resBody);
+        Assert.validate(jdyFieldListResponse, "简道云响应异常, body: {}, cause: {}", resBody);
         return jdyFieldListResponse;
     }
 
