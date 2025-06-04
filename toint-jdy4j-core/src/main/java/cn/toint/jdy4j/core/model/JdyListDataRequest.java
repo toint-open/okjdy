@@ -208,7 +208,7 @@ public class JdyListDataRequest {
      * 等于任意一个, value 为空忽略本条件
      */
     @Nonnull
-    public JdyListDataRequest in(@Nonnull final String fieldName, @Nullable final Collection<Object> values) {
+    public JdyListDataRequest in(@Nonnull final String fieldName, @Nullable final Collection<?> values) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         if (CollUtil.isNotEmpty(values)) {
             final Set<Object> set = values.stream().filter(Objects::nonNull).collect(Collectors.toSet());
@@ -225,7 +225,7 @@ public class JdyListDataRequest {
      * 等于任意一个, value 为空忽略本条件
      */
     @Nonnull
-    public <T, R> JdyListDataRequest in(@Nonnull final SerFunction<T, R> func, @Nullable final Collection<Object> value) {
+    public <T, R> JdyListDataRequest in(@Nonnull final SerFunction<T, R> func, @Nullable final Collection<?> value) {
         return this.in(JacksonUtil.getAlias(func), value);
     }
 
@@ -303,7 +303,7 @@ public class JdyListDataRequest {
      * 不等于任意一个, value 为 null 忽略本条件
      */
     @Nonnull
-    public JdyListDataRequest notIn(@Nonnull final String fieldName, @Nullable final Collection<Object> value) {
+    public JdyListDataRequest notIn(@Nonnull final String fieldName, @Nullable final Collection<?> value) {
         Assert.notBlank(fieldName, "fieldName must not be blank");
         if (CollUtil.isNotEmpty(value)) {
             final Set<Object> set = value.stream().filter(Objects::nonNull).collect(Collectors.toSet());
@@ -321,7 +321,7 @@ public class JdyListDataRequest {
      * 不等于任意一个, value 为 null 忽略本条件
      */
     @Nonnull
-    public <T, R> JdyListDataRequest notIn(@Nonnull final SerFunction<T, R> func, @Nullable final Collection<Object> value) {
+    public <T, R> JdyListDataRequest notIn(@Nonnull final SerFunction<T, R> func, @Nullable final Collection<?> value) {
         return this.notIn(JacksonUtil.getAlias(func), value);
     }
 
