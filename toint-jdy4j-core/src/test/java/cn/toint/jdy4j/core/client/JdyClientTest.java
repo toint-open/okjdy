@@ -139,6 +139,25 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
         return testJdyDo;
     }
 
+    @Test
+    void testUploadFile() {
+        // 测试数据
+        final TestJdyDo testDo = this.createTestDo();
+
+        // 上传文件
+        final List<File> files = List.of(FileUtil.file("/Users/toint/Downloads/能力不足才华有限公司.png"),
+                FileUtil.file("/Users/toint/Downloads/废话少说上号.jpeg"));
+        final JdyFileUploadResponse jdyFileUploadResponse = this.jdyClient.uploadFile(JdyFileUploadRequest.of(testDo), files);
+
+        // 赋值文件
+        final JdyFile jdyFile = jdyFileUploadResponse.toJdyFile();
+        testDo.setFile(jdyFile);
+        testDo.getSub().forEach(sub -> sub.setSubFile(jdyFile));
+
+        // 保存文件
+        this.jdyClient.saveData(JdyDataSaveRequest.of(testDo).transactionId(jdyFileUploadResponse.getTransactionId()));
+    }
+
     @Override
     public void accept(final JdyRequestEvent jdyRequestEvent) {
         final JdyRequestEvent.RequestInfo requestInfo = jdyRequestEvent.getSource();
