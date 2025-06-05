@@ -1,4 +1,4 @@
-package cn.toint.jdy4j.core.client;
+package cn.toint.jdy4j.core.config;
 
 import cn.toint.jdy4j.core.constant.JdyConstant;
 import cn.toint.jdy4j.core.event.JdyRequestEvent;

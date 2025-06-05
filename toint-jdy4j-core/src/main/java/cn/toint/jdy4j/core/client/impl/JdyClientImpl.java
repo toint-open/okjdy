@@ -1,7 +1,7 @@
 package cn.toint.jdy4j.core.client.impl;
 
 import cn.toint.jdy4j.core.client.JdyClient;
-import cn.toint.jdy4j.core.client.JdyClientConfig;
+import cn.toint.jdy4j.core.config.JdyClientConfig;
 import cn.toint.jdy4j.core.enums.JdyFieldTypeEnum;
 import cn.toint.jdy4j.core.enums.JdyUrlEnum;
 import cn.toint.jdy4j.core.event.JdyRequestEvent;

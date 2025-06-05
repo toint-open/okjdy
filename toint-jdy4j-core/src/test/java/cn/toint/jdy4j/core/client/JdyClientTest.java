@@ -2,7 +2,7 @@ package cn.toint.jdy4j.core.client;
 
 import cn.toint.jdy4j.core.annotation.JdyTable;
 import cn.toint.jdy4j.core.client.impl.JdyClientImpl;
-import cn.toint.jdy4j.core.event.JdyRequestEvent;
+import cn.toint.jdy4j.core.config.JdyClientConfig;
 import cn.toint.jdy4j.core.model.*;
 import cn.toint.tool.util.Assert;
 import cn.toint.tool.util.JacksonUtil;
@@ -19,14 +19,13 @@ import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * @author Toint
  * @date 2025/6/2
  */
 @Slf4j
-class JdyClientTest implements Consumer<JdyRequestEvent> {
+class JdyClientTest {
     /**
      * 简道云客户端
      */
@@ -42,7 +41,7 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
 
         // 初始化客户端
         final JdyClientConfig jdyClientConfig = new JdyClientConfig(key);
-        jdyClientConfig.setJdyRequestConsumer(this);
+        jdyClientConfig.setJdyRequestConsumer(jdyRequestEvent -> log.info("请求回调: {}", JacksonUtil.writeValueAsString(jdyRequestEvent.getSource())));
         return new JdyClientImpl(jdyClientConfig);
     }
 
@@ -156,12 +155,6 @@ class JdyClientTest implements Consumer<JdyRequestEvent> {
 
         // 保存文件
         this.jdyClient.saveData(JdyDataSaveRequest.of(testDo).transactionId(jdyFileUploadResponse.getTransactionId()));
-    }
-
-    @Override
-    public void accept(final JdyRequestEvent jdyRequestEvent) {
-        final JdyRequestEvent.RequestInfo requestInfo = jdyRequestEvent.getSource();
-        log.info("请求回调: {}", JacksonUtil.writeValueAsString(requestInfo));
     }
 
     @EqualsAndHashCode(callSuper = true)
