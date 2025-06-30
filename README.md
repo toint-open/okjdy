@@ -1,6 +1,6 @@
-# toint-jdy4j
+# OkJdy
 
-toint-jdy4j 是一个开源、免费、轻量级的简道云 Java SDK, 助力开发者快速集成简道云.
+OkJdy是一个开源、免费、轻量级的简道云Java SDK, 助力开发者快速集成简道云.
 
 ## 快速开始
 
@@ -24,22 +24,22 @@ jdyClient.deleteData();
 
 ## Maven
 
-- [Maven 中央仓库](https://central.sonatype.com/artifact/cn.toint/toint-jdy4j-core)
+- [Maven 中央仓库](https://central.sonatype.com/artifact/cn.toint/okjdy)
 
 ```xml
 
 <dependency>
     <groupId>cn.toint</groupId>
-    <artifactId>toint-jdy4j-core</artifactId>
+    <artifactId>okjdy</artifactId>
     <version>${version}</version>
 </dependency>
 ```
 
 ## 提供bug反馈或建议
 
-提交问题反馈请说明正在使用的 JDK 版本, `toint-jdy4j` 版本和相关依赖库版本.
+提交问题反馈请说明正在使用的 JDK 版本, `okjdy` 版本和相关依赖库版本.
 
-- [GitHub  issue](https://github.com/toint-admin/toint-jdy4j/issues)
+- [GitHub  issue](https://github.com/toint-open/okjdy/issues)
 
 # 沟通说明
 

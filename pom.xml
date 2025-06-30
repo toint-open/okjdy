@@ -28,15 +28,15 @@
     </parent>
 
     <groupId>cn.toint</groupId>
-    <artifactId>toint-jdy4j-parent</artifactId>
-    <version>${revision}</version>
+    <artifactId>okjdy</artifactId>
+    <version>${reversion}</version>
     <packaging>pom</packaging>
-    <name>toint-jdy4j</name>
-    <description>toint-jdy4j 是一个开源、免费、轻量级的简道云 Java SDK, 助力开发者快速集成简道云.</description>
-    <url>https://github.com/toint-admin/toint-jdy4j</url>
+    <name>okjdy</name>
+    <description>OkJdy是一个开源、免费、轻量级的简道云Java SDK, 助力开发者快速集成简道云.</description>
+    <url>https://github.com/toint-open/okjdy</url>
 
     <modules>
-        <module>toint-jdy4j-core</module>
+        <module>okjdy-core</module>
     </modules>
 
     <developers>
@@ -49,9 +49,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/toint-admin/toint-jdy4j.git</connection>
-        <developerConnection>scm:git:ssh://github.com/toint-admin/toint-jdy4j.git</developerConnection>
-        <url>https://github.com/toint-admin/toint-jdy4j</url>
+        <connection>scm:git:git://github.com/toint-open/okjdy.git</connection>
+        <developerConnection>scm:git:ssh://github.com/toint-open/okjdy.git</developerConnection>
+        <url>https://github.com/toint-open/okjdy</url>
     </scm>
 
     <licenses>
@@ -62,14 +62,14 @@
     </licenses>
 
     <properties>
-        <revision>2.0.0-beta.1</revision>
+        <reversion>2.0.0-20250630154347</reversion>
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!--toint-tool-->
-        <toint-tool.version>1.1.0</toint-tool.version>
+        <oktool.version>1.2.0-20250630075953</oktool.version>
         <!--ttl-->
         <ttl.version>2.14.5</ttl.version>
 
@@ -79,8 +79,8 @@
         <dependencies>
             <dependency>
                 <groupId>cn.toint</groupId>
-                <artifactId>toint-tool</artifactId>
-                <version>${toint-tool.version}</version>
+                <artifactId>oktool</artifactId>
+                <version>${oktool.version}</version>
             </dependency>
 
             <!--ttl-->
@@ -115,36 +115,6 @@
                         <phase>verify</phase>
                         <goals>
                             <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!--统一修改版本号-->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>flatten-maven-plugin</artifactId>
-                <version>1.7.0</version>
-                <configuration>
-                    <!--是否更新pom文件，记得设置为true，不然无法更新module里的pom版本号-->
-                    <!--此处还有更高级的用法，具体下方的参考文档-->
-                    <!--https://maven.apache.org/maven-ci-friendly.html-->
-                    <updatePomFile>true</updatePomFile>
-                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>flatten</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>flatten</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>flatten.clean</id>
-                        <phase>clean</phase>
-                        <goals>
-                            <goal>clean</goal>
                         </goals>
                     </execution>
                 </executions>
